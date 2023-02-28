@@ -6,3 +6,6 @@ to build run
 ```
 
 pyinstaller, click, requests and prettytable need to be installed before running the build command
+
+
+the resulting cli is in dist
