@@ -27,9 +27,10 @@ jobs:
           pyinstaller --onefile gladia_cli.py --hidden-import=click --hidden-import=requests --hidden-import=prettytable
 
       - name: Upload release
-        uses: yakuhzi/action-release@v1
+        uses: ncipollo/release-action@v1
         with:
-          file: ./dist/gladia_cli
+          artifacts: "./dist/gladia_cli"
+          bodyFile: "release_note.md"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
