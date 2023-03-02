@@ -20,7 +20,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install click requests prettytable
+          pip install pyinstaller click requests prettytable
 
       - name: Build executable
         run: |
