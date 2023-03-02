@@ -42,11 +42,11 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               release_id: data.id,
-              name: 'gladia_cli.exe',
-              asset_path: './dist/gladia_cli.exe'
+              name: 'gladia_cli',
+              asset_path: './dist/gladia_cli'
             })
 
             console.log(assetResponse.data)
 
-          env:
+        env:
             GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
