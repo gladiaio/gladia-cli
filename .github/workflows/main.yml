@@ -1,0 +1,26 @@
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install dependencies
+      run: |
+        pip install --upgrade pip
+        pip install click requests prettytable
+
+    - name: Build executable
+      run: |
+        pyinstaller --onefile gladia_cli.py --hiddenimport=click --hiddenimport=requests --hiddenimport=prettytable
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: gladia-cli
+        path: dist/
