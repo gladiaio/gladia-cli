@@ -9,26 +9,44 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v2
-      
-    - name: Set up Python 3.8
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install pyinstaller click requests prettytable
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
 
-    - name: Build executable
-      run: |
-        pyinstaller --onefile gladia_cli.py --hiddenimport=click --hiddenimport=requests --hiddenimport=prettytable
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install click requests prettytable
 
-    - name: Upload artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: gladia-cli
-        path: dist/
+      - name: Build executable
+        run: |
+          pyinstaller --onefile gladia_cli.py --hidden-import=click --hidden-import=requests --hidden-import=prettytable
 
+      - name: Create release
+        uses: actions/github-script@v4
+        with:
+          script: |
+            const { data } = await github.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: 'v1.0',
+              name: 'v1.0',
+              body: 'Release notes go here'
+            })
+
+            const assetResponse = await github.repos.uploadReleaseAsset({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: data.id,
+              name: 'gladia_cli.exe',
+              asset_path: './dist/gladia_cli.exe'
+            })
+
+            console.log(assetResponse.data)
+
+          env:
+            GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
