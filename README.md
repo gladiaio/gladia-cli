@@ -23,13 +23,10 @@ $ pip install -r requirements.txt
 
 to build run
 ```
- pyinstaller --onefile gladia_cli.py --hiddenimport=click --hiddenimport=requests --hiddenimport=prettytable
+$ ./build.sh 
 ```
 
-pyinstaller, click, requests and prettytable need to be installed before running the build command
-
-
-the resulting cli is in dist
+the resulting gladia_cli is in dist
 
 
 ## Usage
