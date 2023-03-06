@@ -3,12 +3,16 @@
 ## Direct install
 Linux
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/linux_x64_gladia && mv linux_x64_gladia gladia
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/linux_x64_gladia && \
+mv linux_x64_gladia gladia && \
+chmod +x gladia
 ```
 
 MacOS ARM
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/macos_arm64_gladia && mv macos_arm64_gladia gladia
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/macos_arm64_gladia && \
+mv macos_arm64_gladia gladia && \
+chmod +x gladia
 ```
 
 ## Build from source
