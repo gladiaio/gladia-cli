@@ -1,4 +1,8 @@
 # gladia-cli
+```
+$ pipenv shell
+$ pip install -r requirements.txt
+```
 
 to build run
 ```
