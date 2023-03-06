@@ -1,4 +1,17 @@
 # gladia-cli
+
+## Direct install
+Linux
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/linux_x64_gladia && mv linux_x64_gladia gladia
+```
+
+MacOS ARM
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/macos_arm64_gladia && mv macos_arm64_gladia gladia
+```
+
+## Build from source
 ```
 $ pipenv shell
 $ pip install -r requirements.txt
@@ -14,11 +27,13 @@ pyinstaller, click, requests and prettytable need to be installed before running
 
 the resulting cli is in dist
 
+
+## Usage
 here is the usage:
 
 ```
-$ ./gladia_cli --help
-Usage: gladia_cli [OPTIONS]
+$ ./gladia --help
+Usage: gladia [OPTIONS]
 
   Transcribe an audio file using the Gladia API.
 
@@ -40,11 +55,11 @@ Authentication:
 1. get you Gladia key here: https://app.gladia.io/account
 2. save the key if needed using
 ```
-$ ./gladia_cli --gladia-key MY_GLADIA_KEY --save-gladia-key
+$ ./gladia --gladia-key MY_GLADIA_KEY --save-gladia-key
 ```
 3. or use it inline for each request
 ```
-$ ./gladia_cli --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
+$ ./gladia --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
 ```
 
 
