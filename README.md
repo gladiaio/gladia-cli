@@ -36,20 +36,36 @@ here is the usage:
 $ ./gladia --help
 Usage: gladia [OPTIONS]
 
-  Transcribe an audio file using the Gladia API.
+  Transcribe an audio file or an audio url using the Gladia API.
 
 Options:
-  --audio-url TEXT           URL of the audio file to be transcribed.
-  --language TEXT            Language spoken in the audio file.
-  --language-behaviour TEXT  Determines how to handle multi-language audio.
-  --noise-reduction          Apply noise reduction to the audio.
-  --output-format TEXT       Format in which to return the transcription
-                             results.
-  --diarization              Perform speaker diarization.
-  --gladia-key TEXT          API key for Gladia. Get it at
-                             https://app.gladia.io/account
-  --save-gladia-key          Save the API key to a configuration file.
-  --help                     Show this message and exit.
+  --audio-url TEXT                URL of the audio file to be transcribed.
+  --audio-file TEXT               Path to the audio file to be transcribed.
+  --language-behaviour TEXT       Determines how to handle multi-language
+                                  audio.
+  --language TEXT                 Language spoken in the audio file.
+  --transcription-hint TEXT       Hint to the transcription model. You can
+                                  pass names, topics, custom vocabulary, etc.
+  --noise-reduction               Apply noise reduction to the audio.
+  --diarization                   Perform speaker diarization.
+  --diarization-max-speakers TEXT
+                                  Determines the maximum number of speakers to
+                                  be detected.
+  --direct-translate              Activate direct translation to the specified
+                                  language.
+  --direct-translate-language TEXT
+                                  Language to which to translate the
+                                  transcription, need to activate the direct
+                                  translation using --direct-translate.
+  --text-emotion                  Activate text emotion recognition.
+  --summarization                 Activate summarization.
+  --output-format TEXT            Format in which to return the transcription
+                                  results. Possible values: table, json, text,
+                                  srt, vtt, plain.
+  --gladia-key TEXT               API key for Gladia. Get it at
+                                  https://app.gladia.io/account
+  --save-gladia-key               Save the API key to a configuration file.
+  --help                          Show this message and exit.
 ```
 
 Authentication:
