@@ -156,12 +156,21 @@ def transcribe(
                     table.field_names = field_names
 
                     for sentence in response.json()["prediction"]:
+                        confidences = []
+                        for words in sentence["words"]:
+                            confidences.append(float(words["confidence"]))
+
+                        # calculate the average
+                        
+                        confidence = round(sum(confidences) / len(confidences), 2)
+                        
+
+
                         row = [
-                            Color.GREEN + str(sentence['time_begin']) + Color.END, 
-                            Color.GREEN + str(sentence['time_end']) + Color.END, 
-                            Color.BLUE + str(sentence['confidence']) + Color.END, 
+                            Color.GREEN + str("{:.3f}".format(sentence['time_begin'])) + Color.END, 
+                            Color.GREEN + str("{:.3f}".format(sentence['time_end'])) + Color.END, 
+                            Color.BLUE + str("{:.2f}".format(confidence)) + Color.END, 
                             Color.CYAN + sentence['language'] + Color.END, 
-                            
                         ]
 
                         if diarization:
