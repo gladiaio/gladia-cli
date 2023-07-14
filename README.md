@@ -15,18 +15,31 @@ mv macos_arm64_gladia gladia && \
 chmod +x gladia
 ```
 
+Windows
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia_cli.exe
+```
+
 ## Build from source
 ```
 $ pipenv shell
 $ pip install -r requirements.txt
 ```
 
-to build run
+to build on Macos or Linux run
 ```
 $ ./build.sh 
 ```
+the resulting gladia_cli is in dist 
 
-the resulting gladia_cli is in dist
+
+to build on windows run
+```
+.\build.bat
+```
+the resulting gladia_cli.exe is in dist 
+
+
 
 
 ## Usage
