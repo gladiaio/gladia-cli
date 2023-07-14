@@ -1,8 +1,13 @@
 import click
 import requests
 import os
-import magic
 from prettytable import PrettyTable
+import mimetypes
+
+def get_file_type(file_path):
+    file_extension = file_path.split(".")[-1]
+    mime_type, _ = mimetypes.guess_type(file_extension)
+    return mime_type
 
 GLADIA_API_URL = "https://api.gladia.io/audio/text/audio-transcription/"
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".gladia")
@@ -126,8 +131,7 @@ def transcribe(
                 if audio_url:
                     files["audio_url"] = (None, audio_url)
                 else:
-                    mime = magic.Magic(mime=True)
-                    file_type = mime.from_file(audio_file)
+                    file_type = get_file_type(audio_file)
                     files["audio"] = (audio_file, open(audio_file, "rb"), file_type)
 
                 response = requests.post(GLADIA_API_URL, headers=headers, files=files)

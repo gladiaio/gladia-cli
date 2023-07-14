@@ -4,5 +4,3 @@ requests
 prettytable
 chardet
 charset-normalizer
-python-magic
-python-magic-bin
