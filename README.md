@@ -1,6 +1,8 @@
 # gladia-cli
 
-## Direct install
+## Python Based CLI
+
+### Direct install
 Linux
 ```
 wget https://github.com/gladiaio/gladia-cli/raw/main/dist/linux_x64_gladia && \
@@ -20,7 +22,7 @@ Windows
 wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia_cli.exe
 ```
 
-## Build from source
+### Build from source
 ```
 $ pipenv shell
 $ pip install -r requirements.txt
@@ -38,6 +40,29 @@ to build on windows run
 .\build.bat
 ```
 the resulting gladia_cli.exe is in dist 
+
+## Go Based CLI (New, Faster but alpha)
+### Direct install
+Linux
+```
+wget 
+```
+
+MacOS ARM
+```
+wget 
+```
+
+Windows
+```
+wget 
+```
+
+### Build from source
+```
+$ cd go
+$ ./compile.sh
+```
 
 
 

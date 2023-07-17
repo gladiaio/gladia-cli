@@ -1,0 +1,6 @@
+click
+pyinstaller
+requests
+prettytable
+chardet
+charset-normalizer
