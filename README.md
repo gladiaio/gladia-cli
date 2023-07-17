@@ -5,21 +5,21 @@
 ### Direct install
 Linux
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/linux_x64_gladia && \
+wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/linux_x64_gladia && \
 mv linux_x64_gladia gladia && \
 chmod +x gladia
 ```
 
 MacOS ARM
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/macos_arm64_gladia && \
+wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/macos_arm64_gladia && \
 mv macos_arm64_gladia gladia && \
 chmod +x gladia
 ```
 
 Windows
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia_cli.exe
+wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/gladia_cli.exe
 ```
 
 ### Build from source
@@ -43,19 +43,34 @@ the resulting gladia_cli.exe is in dist
 
 ## Go Based CLI (New, Faster but alpha)
 ### Direct install
-Linux
+Linux X64
 ```
-wget 
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
+```
+
+Linux X32
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-armv7
+```
+
+Linux ARM
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
+```
+
+MacOS Intel
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
 ```
 
 MacOS ARM
 ```
-wget 
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
 ```
 
 Windows
 ```
-wget 
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-windows-amd64.exe
 ```
 
 ### Build from source
@@ -63,8 +78,6 @@ wget
 $ cd go
 $ ./compile.sh
 ```
-
-
 
 
 ## Usage
