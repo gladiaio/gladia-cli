@@ -150,11 +150,20 @@ Basic Example:
 ```
 $ ./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/split_infinity.wav
 
-Transcribing audio file...
-Transcript
-
- time_begin  time_end  probability  language  speaker        transcription
- 0.09        2.07      0.49         en        not_activated  Split infinity
- 2.13        5.19      0.65         en        not_activated  in a time when less is more
++------------+----------+----------+-----------------------+--------------------------------+
+| TIME BEGIN | TIME END | LANGUAGE |        SPEAKER        |         TRANSCRIPTION          |
++------------+----------+----------+-----------------------+--------------------------------+
+|       0.18 |     4.68 | en       | speaker_not_activated | Split infinity in a time when  |
+|            |          |          |                       | less is more,                  |
+|       5.52 |     7.76 | en       | speaker_not_activated | where too much is never        |
+|            |          |          |                       | enough.                        |
+|       8.51 |    10.79 | en       | speaker_not_activated | There is always hope for the   |
+|            |          |          |                       | future.                        |
+|      11.71 |    14.11 | en       | speaker_not_activated | The future can be read from    |
+|            |          |          |                       | the past.                      |
+|      14.57 |    19.91 | en       | speaker_not_activated | The past foreshadows the       |
+|            |          |          |                       | present and the present hasn't |
+|            |          |          |                       | been written yet.              |
++------------+----------+----------+-----------------------+--------------------------------+
 ```
 
