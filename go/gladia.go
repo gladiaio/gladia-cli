@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -477,9 +478,9 @@ func transcribe(options TranscriptionOptions) error {
 				return err
 			}
 
-			err = addBoolField(writer, "diarization", options.Diarization)
+			err = addBoolField(writer, "toggle_diarization", options.Diarization)
 			if err != nil {
-				fmt.Println("Error adding diarization field:", err)
+				fmt.Println("Error adding toggle_diarization field:", err)
 				return err
 			}
 
@@ -513,7 +514,7 @@ func transcribe(options TranscriptionOptions) error {
 				return err
 			}
 
-			if options.OutputFormat == "table" {
+			if options.OutputFormat == "table" || options.OutputFormat == "csv" {
 				err = addStringField(writer, "output_format", "json")
 				if err != nil {
 					fmt.Println("Error adding output_format field:", err)
@@ -581,10 +582,17 @@ func transcribe(options TranscriptionOptions) error {
 				return err
 			}
 
-			fmt.Printf("%sTranscript%s\n\n", Colors.Bold, Colors.Reset)
-
 			if options.OutputFormat == "table" {
 				printTable(apiResponse.Prediction, options)
+				if options.Summarization {
+					fmt.Println()
+					fmt.Println("=======")
+					fmt.Println("Summary")
+					fmt.Println("=======")
+					fmt.Println(apiResponse.PredictionRaw.Summarization)
+				}
+			} else if options.OutputFormat == "csv" {
+				printCSV(apiResponse.Prediction, options)
 				if options.Summarization {
 					fmt.Println()
 					fmt.Println("=======")
@@ -706,6 +714,34 @@ func printTable(predictions []Prediction, options TranscriptionOptions) {
 	table.Render()
 }
 
+func printCSV(predictions []Prediction, options TranscriptionOptions) {
+	writer := csv.NewWriter(os.Stdout)
+	defer writer.Flush()
+
+	header := []string{"Time Begin", "Time End", "Language", "Speaker", "Emotion", "Transcription"}
+	writer.Write(header)
+
+	for _, prediction := range predictions {
+		transcription := prediction.Transcription
+		if options.DirectTranslate && prediction.Transcription != "" {
+			transcription = translateText(prediction.Transcription, options.DirectTranslateLanguage)
+		}
+
+		row := []string{
+			fmt.Sprintf("%.2f", prediction.TimeBegin),
+			fmt.Sprintf("%.2f", prediction.TimeEnd),
+			prediction.Language,
+			prediction.Speaker,
+			prediction.Emotion,
+			transcription,
+		}
+
+		writer.Write(row)
+	}
+
+	writer.Flush()
+}
+
 func translateText(text string, language string) string {
 	// Replace this with your own translation code
 	// translation := text + " (Translated to " + language + ")"
@@ -727,7 +763,7 @@ func main() {
 	directTranslateLanguagePtr := flag.String("direct-translate-language", "", "Language for direct translation")
 	textEmotionPtr := flag.Bool("text-emotion", false, "Enable text emotion analysis")
 	summarizationPtr := flag.Bool("summarization", false, "Enable summarization")
-	outputFormatPtr := flag.String("output-format", "table", "Output format (table, json, srt, vtt, txt)")
+	outputFormatPtr := flag.String("output-format", "table", "Output format (table, csv, json, srt, vtt, txt)")
 	languageListPtr := flag.Bool("transcription-language-list", false, "List available languages for transcription")
 	translationListPtr := flag.Bool("translation-language-list", false, "List available languages for translation")
 	gladiaKeyPtr := flag.String("gladia-key", "", "Gladia API key")
