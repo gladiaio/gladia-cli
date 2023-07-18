@@ -41,7 +41,22 @@ $ ./compile.sh
 ## Python Based CLI (Deprecated)
 
 ### Direct install
-Linux
+Linux X64
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
+```
+
+Linux X32
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-armv7
+```
+
+Linux ARM
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
+```
+
+MacOS Intel
 ```
 wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/linux_x64_gladia && \
 mv linux_x64_gladia gladia && \
@@ -84,39 +99,39 @@ the resulting gladia_cli.exe is in dist
 here is the usage:
 
 ```
-$ ./gladia --help
-Usage: gladia [OPTIONS]
-
-  Transcribe an audio file or an audio url using the Gladia API.
-
-Options:
-  --audio-url TEXT                URL of the audio file to be transcribed.
-  --audio-file TEXT               Path to the audio file to be transcribed.
-  --language-behaviour TEXT       Determines how to handle multi-language
-                                  audio.
-  --language TEXT                 Language spoken in the audio file.
-  --transcription-hint TEXT       Hint to the transcription model. You can
-                                  pass names, topics, custom vocabulary, etc.
-  --noise-reduction               Apply noise reduction to the audio.
-  --diarization                   Perform speaker diarization.
-  --diarization-max-speakers TEXT
-                                  Determines the maximum number of speakers to
-                                  be detected.
-  --direct-translate              Activate direct translation to the specified
-                                  language.
-  --direct-translate-language TEXT
-                                  Language to which to translate the
-                                  transcription, need to activate the direct
-                                  translation using --direct-translate.
-  --text-emotion                  Activate text emotion recognition.
-  --summarization                 Activate summarization.
-  --output-format TEXT            Format in which to return the transcription
-                                  results. Possible values: table, json, text,
-                                  srt, vtt, plain.
-  --gladia-key TEXT               API key for Gladia. Get it at
-                                  https://app.gladia.io/account
-  --save-gladia-key               Save the API key to a configuration file.
-  --help                          Show this message and exit.
+$ Usage of ./gladia:
+  -audio-file string
+    	Path to the audio file
+  -audio-url string
+    	URL of the audio file
+  -diarization
+    	Enable diarization
+  -diarization-max-speakers int
+    	Maximum number of speakers for diarization
+  -direct-translate
+    	Enable direct translation
+  -direct-translate-language string
+    	Language for direct translation
+  -gladia-key string
+    	Gladia API key
+  -language string
+    	Language for transcription (default "english")
+  -language-behaviour string
+    	Language behavior (manual, automatic single language, automatic multiple languages) (default "automatic multiple languages")
+  -noise-reduction
+    	Enable noise reduction
+  -output-format string
+    	Output format (table, csv, json, srt, vtt, txt) (default "table")
+  -save-gladia-key
+    	Save Gladia API key
+  -summarization
+    	Enable summarization
+  -transcription-hint string
+    	Transcription hint
+  -transcription-language-list
+    	List available languages for transcription
+  -translation-language-list
+    	List available languages for translation
 ```
 
 Authentication:
