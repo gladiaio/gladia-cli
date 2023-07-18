@@ -273,7 +273,6 @@ type TranscriptionOptions struct {
 	DiarizationMaxSpeakers  int    `json:"diarization_max_speakers"`
 	DirectTranslate         bool   `json:"direct_translate"`
 	DirectTranslateLanguage string `json:"direct_translate_language"`
-	TextEmotion             bool   `json:"text_emotion"`
 	Summarization           bool   `json:"summarization"`
 	OutputFormat            string `json:"output_format"`
 	IsVideo                 string `json:"is_video"`
@@ -284,13 +283,13 @@ type TranscriptionOptions struct {
 }
 
 type Prediction struct {
-	TimeBegin     float64 `json:"time_begin"`
-	TimeEnd       float64 `json:"time_end"`
-	Words         []Word  `json:"words"`
-	Language      string  `json:"language"`
-	Speaker       string  `json:"speaker,omitempty"`
-	Emotion       string  `json:"emotion,omitempty"`
-	Transcription string  `json:"transcription"`
+	Words         []Word      `json:"words"`
+	Transcription string      `json:"transcription"`
+	Language      string      `json:"language"`
+	TimeBegin     float64     `json:"time_begin"`
+	TimeEnd       float64     `json:"time_end"`
+	Speaker       interface{} `json:"speaker"`
+	Channel       string      `json:"channel"`
 }
 
 type Word struct {
@@ -302,6 +301,13 @@ type Word struct {
 
 type ApiResponse struct {
 	Prediction    []Prediction `json:"prediction"`
+	PredictionRaw struct {
+		Summarization string `json:"summarization"`
+	} `json:"prediction_raw"`
+}
+
+type OtherResponse struct {
+	Prediction    string `json:"prediction"`
 	PredictionRaw struct {
 		Summarization string `json:"summarization"`
 	} `json:"prediction_raw"`
@@ -502,12 +508,6 @@ func transcribe(options TranscriptionOptions) error {
 				return err
 			}
 
-			err = addBoolField(writer, "toggle_text_emotion_recognition", options.TextEmotion)
-			if err != nil {
-				fmt.Println("Error adding toggle_text_emotion_recognition field:", err)
-				return err
-			}
-
 			err = addBoolField(writer, "toggle_summarization", options.Summarization)
 			if err != nil {
 				fmt.Println("Error adding toggle_summarization field:", err)
@@ -521,7 +521,7 @@ func transcribe(options TranscriptionOptions) error {
 					return err
 				}
 			} else {
-				err = addStringField(writer, "output_format", "json")
+				err = addStringField(writer, "output_format", options.OutputFormat)
 				if err != nil {
 					fmt.Println("Error adding output_format field:", err)
 					return err
@@ -575,14 +575,13 @@ func transcribe(options TranscriptionOptions) error {
 				return nil
 			}
 
-			var apiResponse ApiResponse
-			err = json.NewDecoder(resp.Body).Decode(&apiResponse)
-			if err != nil {
-				fmt.Println("Error decoding response:", err)
-				return err
-			}
-
 			if options.OutputFormat == "table" {
+				var apiResponse ApiResponse
+				err = json.NewDecoder(resp.Body).Decode(&apiResponse)
+				if err != nil {
+					fmt.Println("Error decoding response:", err)
+					return err
+				}
 				printTable(apiResponse.Prediction, options)
 				if options.Summarization {
 					fmt.Println()
@@ -592,6 +591,12 @@ func transcribe(options TranscriptionOptions) error {
 					fmt.Println(apiResponse.PredictionRaw.Summarization)
 				}
 			} else if options.OutputFormat == "csv" {
+				var apiResponse ApiResponse
+				err = json.NewDecoder(resp.Body).Decode(&apiResponse)
+				if err != nil {
+					fmt.Println("Error decoding response:", err)
+					return err
+				}
 				printCSV(apiResponse.Prediction, options)
 				if options.Summarization {
 					fmt.Println()
@@ -600,7 +605,22 @@ func transcribe(options TranscriptionOptions) error {
 					fmt.Println("=======")
 					fmt.Println(apiResponse.PredictionRaw.Summarization)
 				}
-			} else if options.OutputFormat == "json" {
+			} else if options.OutputFormat == "srt" || options.OutputFormat == "vtt" || options.OutputFormat == "txt" {
+				// only print the transcription
+				var otherResponse OtherResponse
+				err = json.NewDecoder(resp.Body).Decode(&otherResponse)
+				if err != nil {
+					fmt.Println("Error decoding response:", err)
+					return err
+				}
+				fmt.Print(otherResponse.Prediction)
+			} else {
+				var apiResponse ApiResponse
+				err = json.NewDecoder(resp.Body).Decode(&apiResponse)
+				if err != nil {
+					fmt.Println("Error decoding response:", err)
+					return err
+				}
 				jsonBytes, err := json.MarshalIndent(apiResponse, "", "  ")
 				if err != nil {
 					fmt.Println("Error encoding JSON:", err)
@@ -693,7 +713,7 @@ func addIntField(writer *multipart.Writer, fieldName string, value int) error {
 
 func printTable(predictions []Prediction, options TranscriptionOptions) {
 	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Time Begin", "Time End", "Language", "Speaker", "Emotion", "Transcription"})
+	table.SetHeader([]string{"Time Begin", "Time End", "Language", "Speaker", "Transcription"})
 
 	for _, prediction := range predictions {
 		transcription := prediction.Transcription
@@ -701,12 +721,22 @@ func printTable(predictions []Prediction, options TranscriptionOptions) {
 			transcription = translateText(prediction.Transcription, options.DirectTranslateLanguage)
 		}
 
+		speakerStr := ""
+		switch speaker := prediction.Speaker.(type) {
+		case int:
+			speakerStr = fmt.Sprintf("%d", speaker)
+		case string:
+			speakerStr = speaker
+		default:
+			// Handle the case where the speaker is neither an int nor a string
+			// You can choose to set a default value or handle the error appropriately
+		}
+
 		table.Append([]string{
 			fmt.Sprintf("%.2f", prediction.TimeBegin),
 			fmt.Sprintf("%.2f", prediction.TimeEnd),
 			prediction.Language,
-			prediction.Speaker,
-			prediction.Emotion,
+			speakerStr,
 			transcription,
 		})
 	}
@@ -718,7 +748,7 @@ func printCSV(predictions []Prediction, options TranscriptionOptions) {
 	writer := csv.NewWriter(os.Stdout)
 	defer writer.Flush()
 
-	header := []string{"Time Begin", "Time End", "Language", "Speaker", "Emotion", "Transcription"}
+	header := []string{"Time Begin", "Time End", "Language", "Speaker", "Transcription"}
 	writer.Write(header)
 
 	for _, prediction := range predictions {
@@ -726,13 +756,22 @@ func printCSV(predictions []Prediction, options TranscriptionOptions) {
 		if options.DirectTranslate && prediction.Transcription != "" {
 			transcription = translateText(prediction.Transcription, options.DirectTranslateLanguage)
 		}
+		speakerStr := ""
+		switch speaker := prediction.Speaker.(type) {
+		case int:
+			speakerStr = fmt.Sprintf("%d", speaker)
+		case string:
+			speakerStr = speaker
+		default:
+			// Handle the case where the speaker is neither an int nor a string
+			// You can choose to set a default value or handle the error appropriately
+		}
 
 		row := []string{
 			fmt.Sprintf("%.2f", prediction.TimeBegin),
 			fmt.Sprintf("%.2f", prediction.TimeEnd),
 			prediction.Language,
-			prediction.Speaker,
-			prediction.Emotion,
+			speakerStr,
 			transcription,
 		}
 
@@ -761,7 +800,6 @@ func main() {
 	diarizationMaxSpeakersPtr := flag.Int("diarization-max-speakers", 0, "Maximum number of speakers for diarization")
 	directTranslatePtr := flag.Bool("direct-translate", false, "Enable direct translation")
 	directTranslateLanguagePtr := flag.String("direct-translate-language", "", "Language for direct translation")
-	textEmotionPtr := flag.Bool("text-emotion", false, "Enable text emotion analysis")
 	summarizationPtr := flag.Bool("summarization", false, "Enable summarization")
 	outputFormatPtr := flag.String("output-format", "table", "Output format (table, csv, json, srt, vtt, txt)")
 	languageListPtr := flag.Bool("transcription-language-list", false, "List available languages for transcription")
@@ -782,7 +820,6 @@ func main() {
 		DiarizationMaxSpeakers:  *diarizationMaxSpeakersPtr,
 		DirectTranslate:         *directTranslatePtr,
 		DirectTranslateLanguage: *directTranslateLanguagePtr,
-		TextEmotion:             *textEmotionPtr,
 		Summarization:           *summarizationPtr,
 		OutputFormat:            *outputFormatPtr,
 		LanguageList:            *languageListPtr,
