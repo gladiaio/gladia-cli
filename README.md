@@ -124,8 +124,6 @@ $ Usage of ./gladia:
     	Output format (table, csv, json, srt, vtt, txt) (default "table")
   -save-gladia-key
     	Save Gladia API key
-  -summarization
-    	Enable summarization
   -transcription-hint string
     	Transcription hint
   -transcription-language-list
