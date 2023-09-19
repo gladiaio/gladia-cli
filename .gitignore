@@ -1,6 +1,5 @@
 # Ignore build files
 build/
-dist/
 *.egg-info/
 
 # Ignore Python cache and compiled files
