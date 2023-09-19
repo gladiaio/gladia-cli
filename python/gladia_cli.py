@@ -1,15 +1,22 @@
 import os
 import click
-import requests
+
 import mimetypes
 from prettytable import PrettyTable
 
+import requests
+from requests.adapters import HTTPAdapter
+from requests.packages.urllib3.util.retry import Retry
+
+mimetypes.init()
+
 def get_file_type(file_path):
     file_extension = file_path.split(".")[-1]
-    mime_type, _ = mimetypes.guess_type(file_extension)
+    mime_type = mimetypes.types_map["." + file_extension]
     return mime_type
 
 GLADIA_API_URL = "https://api.gladia.io/audio/text/audio-transcription/"
+
 CONFIG_PATH = os.path.join(os.path.expanduser("~"), ".gladia")
 
 class Color:
@@ -328,9 +335,8 @@ def transcribe(
                     "diarization_max_speakers": (None, str(diarization_max_speakers)),
                     "toggle_direct_translate": (None, "true" if direct_translate else "false"),
                     "target_translation_language": (None, direct_translate_language),
-                    "toggle_text_emotion_recognition": (None, "true" if text_emotion else "false"),
-                    "toggle_summarization": (None, "true" if summarization else "false"),
                     "output_format": (None, this_output_format),
+                    "transcription_hint": (None, transcription_hint),
                 }
 
                 if audio_url:
@@ -339,7 +345,9 @@ def transcribe(
                     file_type = get_file_type(audio_file)
                     files["audio"] = (audio_file, open(audio_file, "rb"), file_type)
 
+                # Use the session to make the POST request
                 response = requests.post(GLADIA_API_URL, headers=headers, files=files)
+
 
                 if response.status_code != 200:
                     click.echo(f"Error: {response.status_code} - {response.text}")
