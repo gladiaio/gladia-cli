@@ -665,7 +665,7 @@ func addFileField(writer *multipart.Writer, file string) error {
 	defer f.Close()
 
 	partHeader := make(textproto.MIMEHeader)
-	partHeader.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "audio_file", filepath.Base(file)))
+	partHeader.Set("Content-Disposition", fmt.Sprintf(`form-data; name="%s"; filename="%s"`, "audio", filepath.Base(file)))
 	partHeader.Set("Content-Type", fileType)
 	part, err := writer.CreatePart(partHeader)
 	if err != nil {
