@@ -38,63 +38,6 @@ $ cd go
 $ ./compile.sh
 ```
 
-## Python Based CLI (Deprecated)
-
-### Direct install
-Linux X64
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
-```
-
-Linux X32
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-armv7
-```
-
-Linux ARM
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
-```
-
-MacOS Intel
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/linux_x64_gladia && \
-mv linux_x64_gladia gladia && \
-chmod +x gladia
-```
-
-MacOS ARM
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/macos_arm64_gladia && \
-mv macos_arm64_gladia gladia && \
-chmod +x gladia
-```
-
-Windows
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/python/dist/gladia_cli.exe
-```
-
-### Build from source
-```
-$ pipenv shell
-$ pip install -r requirements.txt
-```
-
-to build on Macos or Linux run
-```
-$ ./build.sh 
-```
-the resulting gladia_cli is in dist 
-
-
-to build on windows run
-```
-.\build.bat
-```
-the resulting gladia_cli.exe is in dist 
-
-
 ## Usage
 here is the usage:
 
