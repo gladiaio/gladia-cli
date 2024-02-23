@@ -269,10 +269,14 @@ func pollForTranscriptionResult(resultURL, gladiaKey string) (*TranscriptionResu
 		}
 
 		if result.Status == "done" {
+			fmt.Printf("\033[H\033[2J") // Clear the terminal screen
+			fmt.Println("Transcription completed successfully.")
+			fmt.Printf("\033[H\033[2J") // Clear the terminal screen
 			return &result, nil
 		}
 
 		if result.Status == "error" {
+			fmt.Printf("\033[H\033[2J") // Clear the terminal screen
 			return nil, fmt.Errorf("transcription failed with error: %s", result.Result.Transcription.FullTranscript)
 		}
 
