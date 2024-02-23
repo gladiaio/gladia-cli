@@ -1,93 +1,98 @@
 # gladia-cli
 
 ## Go Based CLI (New, Faster but alpha)
+
 ### Direct install
-Linux X64
+
+Linux AMD (For Linux running on 64-bit AMD or Intel processors (x86_64 architecture))
+
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-amd64
+```
+
+Linux ARM 8 (For Linux running on 64-bit ARM processors (ARMv8 architecture)).
+
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-arm64
+```
+
+Linux ARM 7 (For Linux running on 32-bit ARM processors (ARMv7 architecture)).
+
+```
+wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-arm7
+```
+
+
+MacOS Intel (For macOS running on 64-bit AMD or Intel processors (x86_64 architecture)).
+
 ```
 wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
 ```
 
-Linux X32
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-armv7
-```
+MacOS ARM (For macOS running on ARM64 architecture (like Apple's M1, M2 or M3 chips)).
 
-Linux ARM
 ```
 wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
 ```
 
-MacOS Intel
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
-```
+Windows (For Windows running on 64-bit AMD or Intel processors (x86_64 architecture)).
 
-MacOS ARM
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
-```
+[Download](https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-windows-amd64.exe)
 
-Windows
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-windows-amd64.exe
-```
 
 ### Build from source
+
 ```
 $ cd go
 $ ./compile.sh
 ```
 
 ## Usage
+
 here is the usage:
 
 ```
 $ Usage of ./gladia:
   -audio-file string
-    	Path to the audio file
+        Path to the audio file
   -audio-url string
-    	URL of the audio file
+        URL of the audio file
   -diarization
-    	Enable diarization
+        Enable diarization
   -diarization-max-speakers int
-    	Maximum number of speakers for diarization
+        Maximum number of speakers for diarization
   -direct-translate
-    	Enable direct translation
+        Enable direct translation
   -direct-translate-language string
-    	Language for direct translation
+        Language for direct translation
   -gladia-key string
-    	Gladia API key
+        Gladia API key
   -language string
-    	Language for transcription (default "english")
+        Language for transcription (default "english")
   -language-behaviour string
-    	Language behavior (manual, automatic single language, automatic multiple languages) (default "automatic multiple languages")
+        Language behavior (manual, automatic single language, automatic multiple languages) (default "automatic multiple languages")
   -noise-reduction
-    	Enable noise reduction
+        Enable noise reduction
   -output-format string
-    	Output format (table, csv, json, srt, vtt, txt) (default "table")
+        Output format (table, csv, json, srt, vtt, txt) (default "table")
   -save-gladia-key
-    	Save Gladia API key
+        Save Gladia API key
   -transcription-hint string
-    	Transcription hint
+        Transcription hint
   -transcription-language-list
-    	List available languages for transcription
+        List available languages for transcription
   -translation-language-list
-    	List available languages for translation
+        List available languages for translation
 ```
 
 Authentication:
-1. get you Gladia key here: https://app.gladia.io/account
-2. save the key if needed using
-```
-$ ./gladia --gladia-key MY_GLADIA_KEY --save-gladia-key
-```
-3. or use it inline for each request
-```
-$ ./gladia --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
-```
 
+1.  get you Gladia key here: https://app.gladia.io/account
+2.  save the key if needed using
+3.  or use it inline for each request
 
 Basic Example:
+
 ```
 $ ./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/split_infinity.wav
 
@@ -108,3 +113,10 @@ $ ./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/sp
 +------------+----------+----------+-----------------------+--------------------------------+
 ```
 
+```
+$ ./gladia --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
+```
+
+```
+$ ./gladia --gladia-key MY_GLADIA_KEY --save-gladia-key
+```
