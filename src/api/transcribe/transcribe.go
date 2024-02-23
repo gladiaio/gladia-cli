@@ -179,7 +179,7 @@ func UploadFile(filePath string) (*UploadResponse, error) {
 	}
 	defer func() {
 		if cerr := file.Close(); cerr != nil {
-			log.Printf("Failed to close file: %v", cerr)
+			log.Printf("Failed to close file %s: %v", filePath, cerr)
 		}
 	}()
 
