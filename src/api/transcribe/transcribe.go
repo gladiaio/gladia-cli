@@ -6,6 +6,7 @@ import (
 	"fmt"
 	key "gladia/cli/key"
 	"io"
+	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -176,12 +177,16 @@ func UploadFile(filePath string) (*UploadResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	gladiaKey, err := key.GetGladiaKey()
+	defer func() {
+		if cerr := file.Close(); cerr != nil {
+			log.Printf("Failed to close file: %v", cerr)
+		}
+	}()
 
+	gladiaKey, err := key.GetGladiaKey()
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
@@ -189,11 +194,14 @@ func UploadFile(filePath string) (*UploadResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	_, err = io.Copy(part, file)
-	if err != nil {
+
+	if _, err = io.Copy(part, file); err != nil {
 		return nil, err
 	}
-	writer.Close()
+
+	if err = writer.Close(); err != nil {
+		log.Printf("Failed to close writer: %v", err)
+	}
 
 	req, err := http.NewRequest("POST", "https://api.gladia.io/v2/upload", body)
 	if err != nil {
@@ -207,15 +215,18 @@ func UploadFile(filePath string) (*UploadResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if cerr := resp.Body.Close(); cerr != nil {
+			log.Printf("Failed to close response body: %v", cerr)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("failed to upload file, status code: %d (%s)", resp.StatusCode, resp.Status)
 	}
 
 	var uploadResp UploadResponse
-	err = json.NewDecoder(resp.Body).Decode(&uploadResp)
-	if err != nil {
+	if err = json.NewDecoder(resp.Body).Decode(&uploadResp); err != nil {
 		return nil, err
 	}
 
