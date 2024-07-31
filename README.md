@@ -68,7 +68,7 @@ $ Usage of ./gladia:
   -gladia-key string
         Gladia API key
   -language string
-        Language for transcription (default "english")
+        Language for transcription (default "en")
   -language-behaviour string
         Language behavior (manual, automatic single language, automatic multiple languages) (default "automatic multiple languages")
   -noise-reduction
