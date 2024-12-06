@@ -7,44 +7,43 @@
 Linux AMD (For Linux running on 64-bit AMD or Intel processors (x86_64 architecture))
 
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-amd64
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-amd64
 ```
 
 Linux ARM 8 (For Linux running on 64-bit ARM processors (ARMv8 architecture)).
 
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-arm64
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-arm64
 ```
 
 Linux ARM 7 (For Linux running on 32-bit ARM processors (ARMv7 architecture)).
 
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-linux-arm7
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-arm7
 ```
 
 
 MacOS Intel (For macOS running on 64-bit AMD or Intel processors (x86_64 architecture)).
 
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-amd64
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-darwin-amd64
 ```
 
 MacOS ARM (For macOS running on ARM64 architecture (like Apple's M1, M2 or M3 chips)).
 
 ```
-wget https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-darwin-arm64
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-darwin-arm64
 ```
 
 Windows (For Windows running on 64-bit AMD or Intel processors (x86_64 architecture)).
 
-[Download](https://github.com/gladiaio/gladia-cli/raw/main/go/dist/gladia-windows-amd64.exe)
+[Download](https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-windows-amd64.exe)
 
 
 ### Build from source
 
 ```
-$ cd go
-$ ./compile.sh
+$ make build
 ```
 
 ## Usage
