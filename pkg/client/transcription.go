@@ -66,7 +66,7 @@ type TranscriptionListResponse struct {
 
 // ListTranscriptions fetches the list of transcriptions from the Gladia API.
 func (c *GladiaClient) ListTranscriptions(offset, limit int, status, kind, date, beforeDate, afterDate string) (*TranscriptionListResponse, error) {
-	req, err := http.NewRequest("GET", c.GladiaEndpoint+"/transcription", nil)
+	req, err := http.NewRequest("GET", c.GladiaEndpoint+"/v2/transcription", nil)
 	if err != nil {
 		return nil, err
 	}

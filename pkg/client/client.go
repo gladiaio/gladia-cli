@@ -3,7 +3,7 @@ package client
 import "net/http"
 
 // Can be override by the developer, before initializing the client.
-var GladiaApiEndpoint = "https://api.gladia.io/v2"
+var GladiaApiEndpoint = "https://api.gladia.io"
 
 type GladiaClient struct {
 	ApiKey         string
