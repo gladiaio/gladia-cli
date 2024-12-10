@@ -237,10 +237,6 @@ func (c *GladiaClient) createAndExecuteRequest(method, url string, body io.Reade
 		return nil, err
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status code: %d (%s)", resp.StatusCode, resp.Status)
-	}
-
 	return resp, nil
 }
 
