@@ -197,26 +197,21 @@ func (c *GladiaClient) UploadFile(filePath string) (*UploadResponse, error) {
 		log.Printf("Failed to close writer: %v", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.gladia.io/v2/upload", body)
+	req, err := http.NewRequest("POST", c.GladiaEndpoint+"/v2/upload", body)
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("x-gladia-key", c.ApiKey)
 
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		if cerr := resp.Body.Close(); cerr != nil {
-			log.Printf("Failed to close response body: %v", cerr)
-		}
-	}()
+	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("failed to upload file, status code: %d (%s)", resp.StatusCode, resp.Status)
+		return nil, fmt.Errorf("API request failed with status code: %d (%s)", resp.StatusCode, resp.Status)
 	}
 
 	var uploadResp UploadResponse
@@ -237,9 +232,13 @@ func (c *GladiaClient) createAndExecuteRequest(method, url string, body io.Reade
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("x-gladia-key", c.ApiKey)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API request failed with status code: %d (%s)", resp.StatusCode, resp.Status)
 	}
 
 	return resp, nil
@@ -287,7 +286,7 @@ func (c *GladiaClient) GetTranscription(transcriptionRequest TranscriptionReques
 		return nil, err
 	}
 
-	resp, err := c.createAndExecuteRequest("POST", "https://api.gladia.io/v2/transcription", bytes.NewBuffer(requestBody))
+	resp, err := c.createAndExecuteRequest("POST", c.GladiaEndpoint+"/v2/transcription", bytes.NewBuffer(requestBody))
 	if err != nil {
 		return nil, err
 	}
