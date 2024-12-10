@@ -35,10 +35,6 @@ var Colors = Color{
 	Underline: "\033[4m",
 }
 
-var Language types.Language
-var TargetLanguage types.TargetLanguage
-var UploadResponse types.UploadResponse
-
 func main() {
 	audioURLPtr := flag.String("audio-url", "", "URL of the audio file")
 	audioFilePtr := flag.String("audio-file", "", "Path to the audio file")
