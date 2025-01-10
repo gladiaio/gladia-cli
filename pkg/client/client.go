@@ -9,12 +9,14 @@ type GladiaClient struct {
 	ApiKey         string
 	GladiaEndpoint string
 	httpClient     *http.Client
+	Verbose        bool
 }
 
-func NewGladiaClient(apiKey string) *GladiaClient {
+func NewGladiaClient(apiKey string, verbose bool) *GladiaClient {
 	return &GladiaClient{
 		ApiKey:         apiKey,
 		GladiaEndpoint: GladiaApiEndpoint,
 		httpClient:     &http.Client{},
+		Verbose:        verbose,
 	}
 }

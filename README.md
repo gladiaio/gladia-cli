@@ -18,40 +18,41 @@ wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-arm64
 
 Linux ARM 7 (For Linux running on 32-bit ARM processors (ARMv7 architecture)).
 
-```
+```bash
 wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-arm7
 ```
 
 
 MacOS Intel (For macOS running on 64-bit AMD or Intel processors (x86_64 architecture)).
 
-```
+```bash
 wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-darwin-amd64
 ```
 
 MacOS ARM (For macOS running on ARM64 architecture (like Apple's M1, M2 or M3 chips)).
 
-```
+```bash
 wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-darwin-arm64
 ```
 
 Windows (For Windows running on 64-bit AMD or Intel processors (x86_64 architecture)).
 
-[Download](https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-windows-amd64.exe)
-
+```bash
+wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-windows-amd64.exe
+```
 
 ### Build from source
 
-```
-$ make build
+```bash
+make build
 ```
 
 ## Usage
 
 here is the usage:
 
-```
-$ Usage of ./gladia:
+```bash
+Usage of ./gladia:
   -audio-file string
         Path to the audio file
   -audio-url string
@@ -82,6 +83,8 @@ $ Usage of ./gladia:
         List available languages for transcription
   -translation-language-list
         List available languages for translation
+  -verbose
+        Enable verbose printing (default=true)
 ```
 
 Authentication:
@@ -92,8 +95,8 @@ Authentication:
 
 Basic Example:
 
-```
-$ ./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/split_infinity.wav
+```bash
+./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/split_infinity.wav
 
 +------------+----------+----------+-----------------------+--------------------------------+
 | TIME BEGIN | TIME END | LANGUAGE |        SPEAKER        |         TRANSCRIPTION          |
@@ -112,10 +115,10 @@ $ ./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/sp
 +------------+----------+----------+-----------------------+--------------------------------+
 ```
 
-```
-$ ./gladia --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
+```bash
+./gladia --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
 ```
 
-```
-$ ./gladia --gladia-key MY_GLADIA_KEY --save-gladia-key
+```bash
+./gladia --gladia-key MY_GLADIA_KEY --save-gladia-key
 ```
