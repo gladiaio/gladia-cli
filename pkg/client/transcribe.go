@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 )
 
@@ -170,56 +170,101 @@ type Utterances []struct {
 	} `json:"words"`
 }
 
-// UploadFile uploads an audio file to the Gladia API and returns the upload response.
-func (c *GladiaClient) UploadFile(filePath string) (*UploadResponse, error) {
-	file, err := os.Open(filePath)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if cerr := file.Close(); cerr != nil {
-			log.Printf("Failed to close file %s: %v", filePath, cerr)
-		}
-	}()
-
+// UploadFile sends the local audio file to Gladia's /v2/upload/ endpoint and returns the audio_url.
+func (c *GladiaClient) UploadFile(filePath string) (string, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile("audio", filePath)
+
+	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("failed to open file: %w", err)
 	}
+	defer file.Close()
 
-	if _, err = io.Copy(part, file); err != nil {
-		return nil, err
-	}
-
-	if err = writer.Close(); err != nil {
-		log.Printf("Failed to close writer: %v", err)
-	}
-
-	req, err := http.NewRequest("POST", c.GladiaEndpoint+"/v2/upload", body)
+	part, err := writer.CreateFormFile("audio", filepath.Base(filePath))
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("failed to create form file: %w", err)
 	}
+
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return "", fmt.Errorf("failed to copy file contents: %w", err)
+	}
+
+	if err := writer.Close(); err != nil {
+		return "", fmt.Errorf("failed to close multipart writer: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", "https://api.gladia.io/v2/upload/", body)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request for upload: %w", err)
+	}
+
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("x-gladia-key", c.ApiKey)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return nil, err
+		return "", fmt.Errorf("upload request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API request failed with status code: %d (%s)", resp.StatusCode, resp.Status)
+		return "", fmt.Errorf("upload API returned non-OK status: %s", resp.Status)
 	}
 
-	var uploadResp UploadResponse
-	if err = json.NewDecoder(resp.Body).Decode(&uploadResp); err != nil {
-		return nil, err
+	var uploadResp struct {
+		AudioURL string `json:"audio_url"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&uploadResp); err != nil {
+		return "", fmt.Errorf("failed to decode upload response: %w", err)
 	}
 
-	return &uploadResp, nil
+	return uploadResp.AudioURL, nil
+}
+
+// TranscribeAudioURL calls the /v2/transcription/ endpoint using the provided audioURL.
+func (c *GladiaClient) TranscribeAudioURL(audioURL string, reqBody TranscriptionRequest) (*TranscriptionResult, error) {
+	// Set the audio URL in the request body. 
+	reqBody.AudioURL = audioURL
+
+	requestData, err := json.Marshal(reqBody)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal transcription request: %w", err)
+	}
+
+	httpReq, err := http.NewRequest("POST", "https://api.gladia.io/v2/transcription/", bytes.NewReader(requestData))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create transcription request: %w", err)
+	}
+
+	httpReq.Header.Set("Content-Type", "application/json")
+	httpReq.Header.Set("x-gladia-key", c.ApiKey)
+
+	resp, err := c.httpClient.Do(httpReq)
+	if err != nil {
+		return nil, fmt.Errorf("transcription request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("transcription API returned non-OK status: %s", resp.Status)
+	}
+
+	var transResp struct {
+		ResultURL string `json:"result_url"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&transResp); err != nil {
+		return nil, fmt.Errorf("failed to decode transcription response: %w", err)
+	}
+
+	// Now poll for the result...
+	result, pollErr := c.pollForTranscriptionResult(transResp.ResultURL)
+	if pollErr != nil {
+		return nil, pollErr
+	}
+
+	return result, nil
 }
 
 // Create and execute a new HTTP request with JSON body

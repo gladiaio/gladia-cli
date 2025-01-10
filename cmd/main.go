@@ -9,170 +9,157 @@ import (
 	types "github.com/gladiaio/gladia-cli/pkg/client/types"
 )
 
-type Color struct {
-	Reset     string
-	Purple    string
-	Cyan      string
-	DarkCyan  string
-	Blue      string
-	Green     string
-	Yellow    string
-	Red       string
-	Bold      string
-	Underline string
-}
-
-var Colors = Color{
-	Reset:     "\033[0m",
-	Purple:    "\033[95m",
-	Cyan:      "\033[96m",
-	DarkCyan:  "\033[36m",
-	Blue:      "\033[94m",
-	Green:     "\033[92m",
-	Yellow:    "\033[93m",
-	Red:       "\033[91m",
-	Bold:      "\033[1m",
-	Underline: "\033[4m",
-}
-
 func main() {
 	audioURLPtr := flag.String("audio-url", "", "URL of the audio file")
 	audioFilePtr := flag.String("audio-file", "", "Path to the audio file")
-	// languageBehaviourPtr := flag.String("language-behaviour", "automatic multiple languages", "Language behavior (manual, automatic single language, automatic multiple languages)")
-	// languagePtr := flag.String("language", "english", "Language for transcription")
-	// transcriptionHintPtr := flag.String("transcription-hint", "", "Transcription hint")
-	// noiseReductionPtr := flag.Bool("noise-reduction", false, "Enable noise reduction")
+
 	diarizationPtr := flag.Bool("diarization", false, "Enable diarization")
-	diarizationMinSpeakersPtr := flag.Int("diarization-min-speakers", 1, "Minimum number of speakers for diarization")
-	diarizationMaxSpeakersPtr := flag.Int("diarization-max-speakers", 8, "Maximum number of speakers for diarization")
-	diarizationNumberOfSpeakersPtr := flag.Int("diarization-number-of-speakers", 4, "Number of speakers for diarization")
+	diarizationMinSpeakersPtr := flag.Int("diarization-min-speakers", 1, "Minimum number of speakers")
+	diarizationMaxSpeakersPtr := flag.Int("diarization-max-speakers", 8, "Maximum number of speakers")
+	diarizationNumberOfSpeakersPtr := flag.Int("diarization-number-of-speakers", 4, "Number of speakers")
 
 	enableCodeSwitchingPtr := flag.Bool("enable-code-switching", false, "Enable code switching")
 	detectLanguagePtr := flag.Bool("detect-language", true, "Enable language detection")
 
 	summarizationPtr := flag.Bool("summarization", false, "Enable summarization")
-	summarizationTypePtr := flag.String("summarization-type", "general", "Summarization type (general, bullet_points, concise)")
+	summarizationTypePtr := flag.String("summarization-type", "general", "Summarization type")
 
-	customVocabularyPtr := flag.String("custom-vocabulary", "", "Custom vocabulary use a comma separated list of words")
+	customVocabularyPtr := flag.String("custom-vocabulary", "", "Comma-separated list of custom vocabulary words")
 
-	outputFormatPtr := flag.String("output-format", "table", "Output format (table, csv, json, json-simplified, srt, srt-diarized, vtt, vtt-diarized, txt, txt-diarized, summary)")
+	outputFormatPtr := flag.String("output-format", "table", "Output format (table, csv, json, etc.)")
 
-	languageListPtr := flag.Bool("transcription-language-list", false, "List available languages for transcription")
-	translationListPtr := flag.Bool("translation-language-list", false, "List available languages for translation")
+	languageListPtr := flag.Bool("transcription-language-list", false, "List available languages")
+	translationListPtr := flag.Bool("translation-language-list", false, "List translation languages")
 
 	gladiaKeyPtr := flag.String("gladia-key", "", "Gladia API key")
 	saveGladiaKeyPtr := flag.Bool("save-gladia-key", false, "Save Gladia API key")
-	var UploadResponse *gladia.UploadResponse
+
 	flag.Parse()
 
+	// 1) If we only intend to save the key (and no audio is passed), do so and skip the rest
+	if *saveGladiaKeyPtr && *gladiaKeyPtr != "" && *audioURLPtr == "" && *audioFilePtr == "" {
+		err := SaveGladiaKeyToFile(*gladiaKeyPtr)
+		if err != nil {
+			fmt.Printf("Error saving Gladia API key: %s\n", err)
+		} else {
+			fmt.Printf("Gladia API key saved successfully.\n")
+		}
+		// Immediately return so we don't prompt for audio
+		return
+	}
+
+	// 2) Otherwise, if user also provided audio but wants to save the key, save it but continue
 	if *saveGladiaKeyPtr && *gladiaKeyPtr != "" {
 		err := SaveGladiaKeyToFile(*gladiaKeyPtr)
 		if err != nil {
 			fmt.Printf("Error saving Gladia API key: %s\n", err)
 			return
 		}
+		fmt.Printf("Gladia API key saved successfully.\n")
 	}
 
+	// 3) If user did not provide --gladia-key, try reading from a stored file
 	if *gladiaKeyPtr == "" {
 		apiKey, err := GetGladiaKeyFromFile()
 		if err != nil {
 			fmt.Printf("Missing Gladia API key: %s\n", err)
 			return
 		}
-
 		*gladiaKeyPtr = apiKey
 	}
 
 	client := gladia.NewGladiaClient(*gladiaKeyPtr)
 
+	// 4) If just listing languages, do that and return
 	if *languageListPtr {
-		_, err := types.DisplayAllInputLanguagesNames()
-		if err != nil {
+		if _, err := types.DisplayAllInputLanguagesNames(); err != nil {
 			fmt.Printf("Error getting languages: %s\n", err)
-			return
 		}
-
 		return
 	}
 
 	if *translationListPtr {
-		_, err := types.DisplayAllTargetLanguagesNames()
-		if err != nil {
+		if _, err := types.DisplayAllTargetLanguagesNames(); err != nil {
 			fmt.Printf("Error getting languages: %s\n", err)
-			return
 		}
-
 		return
 	}
 
+	// 5) If no file or URL is provided, prompt for audio
 	if *audioURLPtr == "" && *audioFilePtr == "" {
 		fmt.Println("Please provide an audio URL or file path")
 		return
 	}
 
-	if *audioURLPtr != "" && *audioFilePtr != "" {
-		fmt.Println("Please provide only an audio URL or file path")
-		return
-	}
-
-	if *audioURLPtr != "" {
-		UploadResponse.AudioURL = *audioURLPtr
-	} else {
-		if *audioFilePtr == "" {
-			fmt.Println("Please provide an audio file path")
-			return
-		}
-		var err error
-
-		UploadResponse, err = client.UploadFile(*audioFilePtr)
+	// 6) Upload if there's a file, otherwise we'll use the provided URL
+	var audioURL string
+	var err error
+	if *audioFilePtr != "" {
+		audioURL, err = client.UploadFile(*audioFilePtr)
 		if err != nil {
 			fmt.Printf("Error uploading file: %s\n", err)
 			return
 		}
+	} else {
+		audioURL = *audioURLPtr
 	}
 
-	var transcriptionRequest gladia.TranscriptionRequest
-	transcriptionRequest.AudioURL = UploadResponse.AudioURL
-	transcriptionRequest.Diarization = *diarizationPtr
-	transcriptionRequest.DiarizationConfig.MinSpeakers = *diarizationMinSpeakersPtr
-	transcriptionRequest.DiarizationConfig.MaxSpeakers = *diarizationMaxSpeakersPtr
-	transcriptionRequest.DiarizationConfig.NumberOfSpeakers = *diarizationNumberOfSpeakersPtr
-	transcriptionRequest.EnableCodeSwitching = *enableCodeSwitchingPtr
-	transcriptionRequest.DetectLanguage = *detectLanguagePtr
-	transcriptionRequest.Summarization = *summarizationPtr
-	transcriptionRequest.SummarizationConfig = &gladia.SummarizationConfig{Type: *summarizationTypePtr}
-	transcriptionRequest.CustomVocabulary = strings.Split(*customVocabularyPtr, ",")
+	// 7) Build the transcription request
+	transcriptionReq := gladia.TranscriptionRequest{
+		Diarization: *diarizationPtr,
+		DiarizationConfig: struct {
+			MinSpeakers      int `json:"min_speakers"`
+			MaxSpeakers      int `json:"max_speakers"`
+			NumberOfSpeakers int `json:"number_of_speakers"`
+		}{
+			MinSpeakers:      *diarizationMinSpeakersPtr,
+			MaxSpeakers:      *diarizationMaxSpeakersPtr,
+			NumberOfSpeakers: *diarizationNumberOfSpeakersPtr,
+		},
+		EnableCodeSwitching: *enableCodeSwitchingPtr,
+		DetectLanguage:      *detectLanguagePtr,
+		Summarization:       *summarizationPtr,
+		SummarizationConfig: &gladia.SummarizationConfig{
+			Type: *summarizationTypePtr,
+		},
+		CustomVocabulary: strings.Split(*customVocabularyPtr, ","),
+	}
 
-	transcription, err := client.GetTranscription(transcriptionRequest)
+	// 8) Transcribe and handle the result
+	transcriptionResult, err := client.TranscribeAudioURL(audioURL, transcriptionReq)
 	if err != nil {
-		fmt.Printf("Error getting transcription: %s\n", err)
+		fmt.Printf("Transcription error: %s\n", err)
 		return
 	}
-	println()
+
+	fmt.Println("Final transcription result:")
+	fmt.Println(transcriptionResult.Result.Transcription.FullTranscript)
+
+	// 9) Format the output
 	switch *outputFormatPtr {
 	case "table":
-		PrintTableTranscription(*transcription)
+		PrintTableTranscription(*transcriptionResult)
 	case "csv":
-		PrintCSVTranscription(*transcription)
+		PrintCSVTranscription(*transcriptionResult)
 	case "json":
-		PrintJSONTranscription(*transcription)
+		PrintJSONTranscription(*transcriptionResult)
 	case "json-simplified":
-		PrintJSONSimplifiedTranscription(*transcription)
+		PrintJSONSimplifiedTranscription(*transcriptionResult)
 	case "srt":
-		PrintSRTTranscription(*transcription)
+		PrintSRTTranscription(*transcriptionResult)
 	case "srt-diarized":
-		PrintSRTDiarizedTranscription(*transcription)
+		PrintSRTDiarizedTranscription(*transcriptionResult)
 	case "vtt":
-		PrintVTTTranscription(*transcription)
+		PrintVTTTranscription(*transcriptionResult)
 	case "vtt-diarized":
-		PrintVTTDiarizedTranscription(*transcription)
+		PrintVTTDiarizedTranscription(*transcriptionResult)
 	case "txt":
-		PrintTXTTranscription(*transcription)
+		PrintTXTTranscription(*transcriptionResult)
 	case "txt-diarized":
-		PrintTXTDiarizedTranscription(*transcription)
+		PrintTXTDiarizedTranscription(*transcriptionResult)
 	case "summary":
-		PrintSummarization(*transcription)
+		PrintSummarization(*transcriptionResult)
 	default:
-		PrintTableTranscription(*transcription)
+		PrintTableTranscription(*transcriptionResult)
 	}
 }
