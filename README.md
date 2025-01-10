@@ -83,6 +83,8 @@ Usage of ./gladia:
         List available languages for transcription
   -translation-language-list
         List available languages for translation
+  -verbose
+        Enable verbose printing (default=true)
 ```
 
 Authentication:

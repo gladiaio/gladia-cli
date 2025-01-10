@@ -2,6 +2,7 @@
 build:
 	go build -o gladia -v ./cmd/*.go
 
+.PHONY: dist
 dist:
 	GOOS=linux GOARCH=arm GOARM=7 go build -o dist/gladia-linux-armhf -v ./cmd/*.go
 	GOOS=linux GOARCH=arm64 go build -o dist/gladia-linux-arm64 -v ./cmd/*.go
@@ -10,6 +11,9 @@ dist:
 	GOOS=windows GOARCH=amd64 go build -o dist/gladia-windows-x86_64.exe -v ./cmd/*.go
 	GOOS=darwin GOARCH=amd64 go build -o dist/gladia-darwin-x86_64 -v ./cmd/*.go
 	GOOS=darwin GOARCH=arm64 go build -o dist/gladia-darwin-arm64 -v ./cmd/*.go
+
+	@echo "Dist files:"
+	@ls -l dist
 
 dev:
 	go run -x ./cmd/*.go -audio-file split_infinity.wav

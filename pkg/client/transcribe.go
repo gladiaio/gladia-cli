@@ -303,18 +303,27 @@ func (c *GladiaClient) pollForTranscriptionResult(resultURL string) (*Transcript
 		}
 
 		if result.Status == "done" {
-			fmt.Printf("\033[H\033[2J") // Clear the terminal screen
-			fmt.Println("Transcription completed successfully.")
-			fmt.Printf("\033[H\033[2J") // Clear the terminal screen
+			if c.Verbose {
+				fmt.Printf("\033[H\033[2J") // Clear the terminal screen
+				fmt.Println("Transcription completed successfully.")
+				fmt.Printf("\033[H\033[2J") // Clear the terminal screen
+			}
 			return &result, nil
 		}
 
 		if result.Status == "error" {
-			fmt.Printf("\033[H\033[2J") // Clear the terminal screen
+			if c.Verbose {
+				fmt.Printf("\033[H\033[2J") // Clear the terminal screen
+			}
 			return nil, fmt.Errorf("transcription failed with error: %s", result.Result.Transcription.FullTranscript)
 		}
 
-		fmt.Printf("\rTranscription in progress... %s     (%s) (request_id: %s)", spinner[spinnerIndex], result.Status, result.RequestID)
+		if c.Verbose {
+			fmt.Printf("\rTranscription in progress... %s     (%s) (request_id: %s)",
+				spinner[spinnerIndex],
+				result.Status,
+				result.RequestID)
+		}
 		spinnerIndex = (spinnerIndex + 1) % len(spinner)
 
 		time.Sleep(1 * time.Second)

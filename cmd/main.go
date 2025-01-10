@@ -34,6 +34,8 @@ func main() {
 	gladiaKeyPtr := flag.String("gladia-key", "", "Gladia API key")
 	saveGladiaKeyPtr := flag.Bool("save-gladia-key", false, "Save Gladia API key")
 
+	verbosePtr := flag.Bool("verbose", true, "Enable verbose printing (default=true)")
+
 	flag.Parse()
 
 	// 1) If we only intend to save the key (and no audio is passed), do so and skip the rest
@@ -68,7 +70,7 @@ func main() {
 		*gladiaKeyPtr = apiKey
 	}
 
-	client := gladia.NewGladiaClient(*gladiaKeyPtr)
+	client := gladia.NewGladiaClient(*gladiaKeyPtr, *verbosePtr)
 
 	// 4) If just listing languages, do that and return
 	if *languageListPtr {
@@ -132,8 +134,15 @@ func main() {
 		return
 	}
 
-	fmt.Println("Final transcription result:")
-	fmt.Println(transcriptionResult.Result.Transcription.FullTranscript)
+	if *verbosePtr {
+		fmt.Println("Final transcription result:")
+	}
+	if *verbosePtr {
+		fmt.Println(transcriptionResult.Result.Transcription.FullTranscript)
+	} else {
+		// If user doesn't want the final line, skip it or just print the bare transcript
+		// e.g., fmt.Println(transcriptionResult.Result.Transcription.FullTranscript)
+	}
 
 	// 9) Format the output
 	switch *outputFormatPtr {
