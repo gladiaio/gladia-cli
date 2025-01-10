@@ -4,7 +4,7 @@ build:
 
 .PHONY: dist
 dist:
-	GOOS=linux GOARCH=arm GOARM=7 go build -o dist/gladia-linux-armhf -v ./cmd/*.go
+	GOOS=linux GOARCH=arm GOARM=7 go build -o dist/gladia-linux-arm7 -v ./cmd/*.go
 	GOOS=linux GOARCH=arm64 go build -o dist/gladia-linux-arm64 -v ./cmd/*.go
 	GOOS=linux GOARCH=amd64 go build -o dist/gladia-linux-x86_64 -v ./cmd/*.go
 	GOOS=linux GOARCH=386 go build -o dist/gladia-linux-i386 -v ./cmd/*.go
