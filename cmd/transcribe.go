@@ -6,14 +6,17 @@ import (
 	"strings"
 
 	gladia "github.com/gladiaio/gladia-cli/pkg/client"
+	"github.com/gladiaio/gladia-cli/pkg/client/types"
 	"github.com/spf13/cobra"
 )
 
 func newTranscribeCmd() *cobra.Command {
 	var (
-		outputFormat string
-		verbose      bool
-		diarization  bool
+		outputFormat  string
+		languageFlag  string
+		codeSwitching bool
+		verbose       bool
+		diarization   bool
 	)
 
 	cmd := &cobra.Command{
@@ -24,9 +27,28 @@ func newTranscribeCmd() *cobra.Command {
 Examples:
   gladia transcribe meeting.wav
   gladia transcribe audio.mp3 -o text
+  gladia transcribe podcast.mp3 --language en
+  gladia transcribe interview.mp3 --language en,fr,de
+  gladia transcribe call.wav --language en,fr --code-switching -o json
+  gladia transcribe call.wav --diarize -o srt
   gladia transcribe https://example.com/audio.mp3 -o json`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := validateOutputFormat(outputFormat); err != nil {
+				return err
+			}
+
+			langs, err := types.ParseLanguages(languageFlag)
+			if err != nil {
+				return err
+			}
+
+			codeSwitchSet := cmd.Flags().Changed("code-switching") || cmd.Flags().Changed("code-switch")
+			langConfig, err := buildLanguageConfig(langs, codeSwitching, codeSwitchSet)
+			if err != nil {
+				return err
+			}
+
 			key, err := ResolveAPIKey(rootGladiaKey)
 			if err != nil {
 				return err
@@ -40,7 +62,8 @@ Examples:
 			}
 
 			transcriptionReq := gladia.TranscriptionRequest{
-				Diarization: diarization,
+				LanguageConfig: langConfig,
+				Diarization:    diarization,
 				DiarizationConfig: struct {
 					MinSpeakers      int `json:"min_speakers"`
 					MaxSpeakers      int `json:"max_speakers"`
@@ -50,7 +73,6 @@ Examples:
 					MaxSpeakers:      8,
 					NumberOfSpeakers: 4,
 				},
-				DetectLanguage: true,
 			}
 
 			result, err := client.TranscribeAudioURL(audioURL, transcriptionReq)
@@ -58,16 +80,60 @@ Examples:
 				return fmt.Errorf("transcription failed: %w", err)
 			}
 
-			printTranscriptionResult(*result, outputFormat)
+			printTranscriptionResult(*result, outputFormat, diarization)
 			return nil
 		},
 	}
 
-	cmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Output format: text, json, json-full")
+	cmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Output format: text, json, json-full, srt, vtt")
+	cmd.Flags().StringVar(&languageFlag, "language", "", "Language(s) as comma-separated ISO codes: en (single) or en,fr,de (code switching)")
+	cmd.Flags().BoolVar(&codeSwitching, "code-switching", false, "Enable code switching (requires 2+ languages in --language; auto-on when multiple are set)")
+	cmd.Flags().BoolVar(&codeSwitching, "code-switch", false, "Alias for --code-switching")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show progress while transcribing")
 	cmd.Flags().BoolVar(&diarization, "diarize", false, "Enable speaker diarization")
 
 	return cmd
+}
+
+func buildLanguageConfig(langs []types.Language, codeSwitching, codeSwitchSet bool) (*gladia.LanguageConfig, error) {
+	if len(langs) == 0 {
+		if codeSwitchSet && codeSwitching {
+			return nil, fmt.Errorf("code switching requires multiple languages: --language en,fr,de")
+		}
+		return nil, nil
+	}
+
+	codes := make([]string, len(langs))
+	for i, lang := range langs {
+		codes[i] = string(lang)
+	}
+
+	cfg := &gladia.LanguageConfig{Languages: codes}
+
+	// Multiple languages → code switching (Gladia detects language per utterance).
+	if len(langs) >= 2 {
+		if codeSwitchSet && !codeSwitching {
+			return nil, fmt.Errorf("code switching cannot be disabled when 2+ languages are set (use a single --language code instead)")
+		}
+		cfg.CodeSwitching = true
+		return cfg, nil
+	}
+
+	// Single language.
+	if codeSwitchSet && codeSwitching {
+		return nil, fmt.Errorf("code switching requires at least 2 languages: --language en,fr,de")
+	}
+
+	return cfg, nil
+}
+
+func validateOutputFormat(format string) error {
+	switch format {
+	case "text", "txt", "json", "json-full", "srt", "vtt":
+		return nil
+	default:
+		return fmt.Errorf("unknown output format %q (use text, json, json-full, srt, or vtt)", format)
+	}
 }
 
 func isHTTPURL(s string) bool {
@@ -91,16 +157,32 @@ func resolveAudioSource(client *gladia.GladiaClient, source string) (string, err
 	return audioURL, nil
 }
 
-func printTranscriptionResult(result gladia.TranscriptionResult, format string) {
+func printTranscriptionResult(result gladia.TranscriptionResult, format string, diarize bool) {
 	switch format {
 	case "text", "txt":
-		PrintTXTTranscription(result)
+		if diarize {
+			PrintTXTDiarizedTranscription(result)
+		} else {
+			PrintTXTTranscription(result)
+		}
 	case "json":
 		PrintJSONSimplifiedTranscription(result)
 	case "json-full":
 		PrintJSONTranscription(result)
+	case "srt":
+		if diarize {
+			PrintSRTDiarizedTranscription(result)
+		} else {
+			PrintSRTTranscription(result)
+		}
+	case "vtt":
+		if diarize {
+			PrintVTTDiarizedTranscription(result)
+		} else {
+			PrintVTTTranscription(result)
+		}
 	default:
-		fmt.Fprintf(os.Stderr, "unknown output format %q (use text, json, or json-full)\n", format)
+		fmt.Fprintf(os.Stderr, "unknown output format %q\n", format)
 		os.Exit(1)
 	}
 }

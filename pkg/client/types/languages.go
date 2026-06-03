@@ -2,6 +2,7 @@ package types
 
 import (
 	"fmt"
+	"strings"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/language/display"
@@ -218,6 +219,80 @@ const (
 
 func (l Language) String() string {
 	return string(l)
+}
+
+// ParseLanguage validates a single ISO 639-1 language code.
+// An empty string means no explicit language (auto-detect).
+func ParseLanguage(s string) (Language, error) {
+	langs, err := ParseLanguages(s)
+	if err != nil {
+		return "", err
+	}
+	if len(langs) == 0 {
+		return "", nil
+	}
+	if len(langs) > 1 {
+		return "", fmt.Errorf("multiple languages %q: use ParseLanguages or comma-separated --language en,fr", s)
+	}
+	return langs[0], nil
+}
+
+// ParseLanguages validates comma-separated ISO 639-1 codes (e.g. "en,fr,de").
+// An empty string means no explicit languages (auto-detect).
+func ParseLanguages(s string) ([]Language, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return nil, nil
+	}
+	parts := strings.Split(s, ",")
+	langs := make([]Language, 0, len(parts))
+	seen := make(map[Language]struct{}, len(parts))
+	for _, part := range parts {
+		code := strings.TrimSpace(strings.ToLower(part))
+		if code == "" {
+			continue
+		}
+		lang := Language(code)
+		if _, ok := seen[lang]; ok {
+			continue
+		}
+		valid := false
+		for _, allowed := range allInputLanguages() {
+			if allowed == lang {
+				valid = true
+				break
+			}
+		}
+		if !valid {
+			return nil, fmt.Errorf("unknown language %q (use ISO 639-1 codes, e.g. en,fr; run: gladia languages)", code)
+		}
+		seen[lang] = struct{}{}
+		langs = append(langs, lang)
+	}
+	if len(langs) == 0 {
+		return nil, fmt.Errorf("no valid language codes in %q", s)
+	}
+	return langs, nil
+}
+
+func allInputLanguages() []Language {
+	return []Language{
+		LanguageAf, LanguageSq, LanguageAm, LanguageAr, LanguageHy, LanguageAs, LanguageAz,
+		LanguageBa, LanguageEu, LanguageBe, LanguageBn, LanguageBs, LanguageBr, LanguageBg,
+		LanguageCa, LanguageZh, LanguageHr, LanguageCs, LanguageDa, LanguageNl, LanguageEn,
+		LanguageAt, LanguageFo, LanguageFi, LanguageFr, LanguageGl, LanguageKa, LanguageDe,
+		LanguageEl, LanguageGu, LanguageHt, LanguageHa, LanguageHaw, LanguageHe, LanguageHi,
+		LanguageHu, LanguageIs, LanguageId, LanguageIt, LanguageJp, LanguageJv, LanguageKn,
+		LanguageKk, LanguageKm, LanguageKo, LanguageLo, LanguageLa, LanguageLv, LanguageLn,
+		LanguageLt, LanguageLb, LanguageMk, LanguageMg, LanguageMs, LanguageMl, LanguageMt,
+		LanguageMi, LanguageMr, LanguageMn, LanguageMymr, LanguageNe, LanguageNo, LanguageNn,
+		LanguageOc, LanguagePs, LanguageFa, LanguagePl, LanguagePt, LanguagePa, LanguageRo,
+		LanguageRu, LanguageSa, LanguageSr, LanguageSn, LanguageSd, LanguageSi, LanguageSk,
+		LanguageSl, LanguageSo, LanguageEs, LanguageSu, LanguageSw, LanguageSv, LanguageTl,
+		LanguageTg, LanguageTa, LanguageTt, LanguageTe, LanguageTh, LanguageBo, LanguageTr,
+		LanguageTk, LanguageUk, LanguageUr, LanguageUz, LanguageVi, LanguageCy, LanguageYi,
+		LanguageYo,
+	}
 }
 
 func DisplayAllInputLanguagesNames() (string, error) {

@@ -26,16 +26,20 @@ type UploadResponse struct {
 	} `json:"audio_metadata"`
 }
 
+type LanguageConfig struct {
+	Languages     []string `json:"languages,omitempty"`
+	CodeSwitching bool     `json:"code_switching,omitempty"`
+}
+
 type TranscriptionRequest struct {
 	AudioURL          string `json:"audio_url"`
+	LanguageConfig    *LanguageConfig `json:"language_config,omitempty"`
 	Diarization       bool   `json:"diarization"`
 	DiarizationConfig struct {
 		MinSpeakers      int `json:"min_speakers"`
 		MaxSpeakers      int `json:"max_speakers"`
 		NumberOfSpeakers int `json:"number_of_speakers"`
 	} `json:"diarization_config"`
-	EnableCodeSwitching bool                 `json:"enable_code_switching"`
-	DetectLanguage      bool                 `json:"detect_language"`
 	Summarization       bool                 `json:"summarization"`
 	SummarizationConfig *SummarizationConfig `json:"summarization_config"`
 	Translation         bool                 `json:"translation"`

@@ -20,6 +20,7 @@ func main() {
 
 	rootCmd.AddCommand(newTranscribeCmd())
 	rootCmd.AddCommand(newAuthCmd())
+	rootCmd.AddCommand(newLanguagesCmd())
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
