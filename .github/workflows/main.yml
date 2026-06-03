@@ -1,7 +1,10 @@
-name: PyInstaller
+name: Build
 
 on:
   push:
+    branches:
+      - main
+  pull_request:
     branches:
       - main
 
@@ -10,27 +13,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          python-version: 3.8
+          go-version: "1.22"
 
-      - name: Install dependencies
-        run: |
-          pip install --upgrade pip
-          pip install pyinstaller click requests prettytable
+      - name: Build
+        run: make build
 
-      - name: Build executable
-        run: |
-          pyinstaller --onefile gladia_cli.py --hidden-import=click --hidden-import=requests --hidden-import=prettytable
-
-      - name: Upload release
-        uses: ncipollo/release-action@v1
-        with:
-          artifacts: "./dist/gladia_cli"
-          bodyFile: "release_note.md"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      - name: Test
+        run: make test
