@@ -10,7 +10,6 @@ import (
 )
 
 func PrintTXTTranscription(response gladia.TranscriptionResult) {
-	println()
 	fmt.Println(response.Result.Transcription.FullTranscript)
 }
 

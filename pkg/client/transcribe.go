@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -195,7 +196,7 @@ func (c *GladiaClient) UploadFile(filePath string) (string, error) {
 		return "", fmt.Errorf("failed to close multipart writer: %w", err)
 	}
 
-	req, err := http.NewRequest("POST", "https://api.gladia.io/v2/upload/", body)
+	req, err := http.NewRequest("POST", c.apiURL("/v2/upload/"), body)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request for upload: %w", err)
 	}
@@ -233,27 +234,17 @@ func (c *GladiaClient) TranscribeAudioURL(audioURL string, reqBody Transcription
 		return nil, fmt.Errorf("failed to marshal transcription request: %w", err)
 	}
 
-	httpReq, err := http.NewRequest("POST", "https://api.gladia.io/v2/transcription/", bytes.NewReader(requestData))
-	if err != nil {
-		return nil, fmt.Errorf("failed to create transcription request: %w", err)
-	}
-
-	httpReq.Header.Set("Content-Type", "application/json")
-	httpReq.Header.Set("x-gladia-key", c.ApiKey)
-
-	resp, err := c.httpClient.Do(httpReq)
+	resp, err := c.createAndExecuteRequest("POST", c.apiURL("/v2/transcription/"), bytes.NewReader(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("transcription request failed: %w", err)
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		return nil, fmt.Errorf("transcription API returned non-OK status: %s", resp.Status)
+	if resp.StatusCode >= 300 {
+		return nil, c.decodeAPIError(resp)
 	}
 
-	var transResp struct {
-		ResultURL string `json:"result_url"`
-	}
+	var transResp TranscriptionResponse
 	if err := json.NewDecoder(resp.Body).Decode(&transResp); err != nil {
 		return nil, fmt.Errorf("failed to decode transcription response: %w", err)
 	}
@@ -330,41 +321,16 @@ func (c *GladiaClient) pollForTranscriptionResult(resultURL string) (*Transcript
 	}
 }
 
-func (c *GladiaClient) GetTranscription(transcriptionRequest TranscriptionRequest) (*TranscriptionResult, error) {
-	requestBody, err := json.Marshal(transcriptionRequest)
-	if err != nil {
-		return nil, err
+func (c *GladiaClient) decodeAPIError(resp *http.Response) error {
+	var respError struct {
+		Message          string   `json:"message"`
+		ValidationErrors []string `json:"validation_errors"`
 	}
-
-	resp, err := c.createAndExecuteRequest("POST", c.GladiaEndpoint+"/v2/transcription", bytes.NewBuffer(requestBody))
-	if err != nil {
-		return nil, err
+	if err := json.NewDecoder(resp.Body).Decode(&respError); err != nil {
+		return fmt.Errorf("API error: %s", resp.Status)
 	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 300 {
-		var respError struct {
-			Message          string   `json:"message"`
-			Path             string   `json:"path"`
-			RequestID        string   `json:"request_id"`
-			StatusCode       int      `json:"statusCode"`
-			Timestamp        string   `json:"timestamp"`
-			ValidationErrors []string `json:"validation_errors"`
-		}
-
-		if err := json.NewDecoder(resp.Body).Decode(&respError); err != nil {
-			return nil, fmt.Errorf("failed to decode error response: %v", err)
-		}
-
-		errorMessage := fmt.Sprintf("Error message: %s \n Validation errors: %v", respError.Message, respError.ValidationErrors)
-		println(errorMessage)
-		return nil, fmt.Errorf("failed to request transcription, status code: %d %s", resp.StatusCode, respError.Message)
+	if len(respError.ValidationErrors) > 0 {
+		return fmt.Errorf("%s (%s)", respError.Message, strings.Join(respError.ValidationErrors, "; "))
 	}
-
-	var transcriptionResponse TranscriptionResponse
-	if err := json.NewDecoder(resp.Body).Decode(&transcriptionResponse); err != nil {
-		return nil, err
-	}
-
-	return c.pollForTranscriptionResult(transcriptionResponse.ResultURL)
+	return fmt.Errorf("%s", respError.Message)
 }

@@ -1,8 +1,11 @@
 package client
 
-import "net/http"
+import (
+	"net/http"
+	"strings"
+)
 
-// Can be override by the developer, before initializing the client.
+// GladiaApiEndpoint is the default Gladia API base URL.
 var GladiaApiEndpoint = "https://api.gladia.io"
 
 type GladiaClient struct {
@@ -19,4 +22,8 @@ func NewGladiaClient(apiKey string, verbose bool) *GladiaClient {
 		httpClient:     &http.Client{},
 		Verbose:        verbose,
 	}
+}
+
+func (c *GladiaClient) apiURL(path string) string {
+	return strings.TrimSuffix(c.GladiaEndpoint, "/") + path
 }
