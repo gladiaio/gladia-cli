@@ -28,7 +28,7 @@ func SaveGladiaKeyToFile(gladiaKey string) error {
 		return err
 	}
 
-	file, err := os.Create(configPath)
+	file, err := os.OpenFile(configPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o600)
 	if err != nil {
 		return err
 	}
@@ -39,6 +39,9 @@ func SaveGladiaKeyToFile(gladiaKey string) error {
 		return err
 	}
 	if err := writer.Flush(); err != nil {
+		return err
+	}
+	if err := os.Chmod(configPath, 0o600); err != nil {
 		return err
 	}
 
