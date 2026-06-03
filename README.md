@@ -1,124 +1,73 @@
 # gladia-cli
 
-## Go Based CLI (New, Faster but alpha)
+Command-line tool for Gladia pre-recorded speech-to-text (v2 API).
 
-### Direct install
+## Install
 
-Linux AMD (For Linux running on 64-bit AMD or Intel processors (x86_64 architecture))
+### Pre-built binaries
 
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-amd64
-```
-
-Linux ARM 8 (For Linux running on 64-bit ARM processors (ARMv8 architecture)).
-
-```
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-arm64
-```
-
-Linux ARM 7 (For Linux running on 32-bit ARM processors (ARMv7 architecture)).
-
-```bash
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-linux-arm7
-```
-
-
-MacOS Intel (For macOS running on 64-bit AMD or Intel processors (x86_64 architecture)).
-
-```bash
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-darwin-amd64
-```
-
-MacOS ARM (For macOS running on ARM64 architecture (like Apple's M1, M2 or M3 chips)).
-
-```bash
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-darwin-arm64
-```
-
-Windows (For Windows running on 64-bit AMD or Intel processors (x86_64 architecture)).
-
-```bash
-wget https://github.com/gladiaio/gladia-cli/raw/main/dist/gladia-windows-amd64.exe
-```
-
-### Build from source
+Download from [GitHub releases](https://github.com/gladiaio/gladia-cli/releases) or build from source:
 
 ```bash
 make build
 ```
 
-## Usage
+The binary is written to `./gladia`.
 
-here is the usage:
+## Authentication
 
-```bash
-Usage of ./gladia:
-  -audio-file string
-        Path to the audio file
-  -audio-url string
-        URL of the audio file
-  -diarization
-        Enable diarization
-  -diarization-max-speakers int
-        Maximum number of speakers for diarization
-  -direct-translate
-        Enable direct translation
-  -direct-translate-language string
-        Language for direct translation
-  -gladia-key string
-        Gladia API key
-  -language string
-        Language for transcription (default "english")
-  -language-behaviour string
-        Language behavior (manual, automatic single language, automatic multiple languages) (default "automatic multiple languages")
-  -noise-reduction
-        Enable noise reduction
-  -output-format string
-        Output format (table, csv, json, srt, vtt, txt) (default "table")
-  -save-gladia-key
-        Save Gladia API key
-  -transcription-hint string
-        Transcription hint
-  -transcription-language-list
-        List available languages for transcription
-  -translation-language-list
-        List available languages for translation
-  -verbose
-        Enable verbose printing (default=true)
-```
+Credentials are resolved in this order:
 
-Authentication:
+1. `GLADIA_API_KEY` environment variable
+2. `~/.gladia` file
+3. `--gladia-key` flag
 
-1.  get you Gladia key here: https://app.gladia.io/account
-2.  save the key if needed using
-3.  or use it inline for each request
-
-Basic Example:
+Save a key to disk:
 
 ```bash
-./gladia_cli --audio-url http://files.gladia.io/example/audio-transcription/split_infinity.wav
-
-+------------+----------+----------+-----------------------+--------------------------------+
-| TIME BEGIN | TIME END | LANGUAGE |        SPEAKER        |         TRANSCRIPTION          |
-+------------+----------+----------+-----------------------+--------------------------------+
-|       0.18 |     4.68 | en       | speaker_not_activated | Split infinity in a time when  |
-|            |          |          |                       | less is more,                  |
-|       5.52 |     7.76 | en       | speaker_not_activated | where too much is never        |
-|            |          |          |                       | enough.                        |
-|       8.51 |    10.79 | en       | speaker_not_activated | There is always hope for the   |
-|            |          |          |                       | future.                        |
-|      11.71 |    14.11 | en       | speaker_not_activated | The future can be read from    |
-|            |          |          |                       | the past.                      |
-|      14.57 |    19.91 | en       | speaker_not_activated | The past foreshadows the       |
-|            |          |          |                       | present and the present hasn't |
-|            |          |          |                       | been written yet.              |
-+------------+----------+----------+-----------------------+--------------------------------+
+gladia auth set YOUR_API_KEY
 ```
+
+Get a key at [app.gladia.io/account](https://app.gladia.io/account).
+
+## Quickstart
 
 ```bash
-./gladia --gladia-key MY_GLADIA_KEY --OTHER_OPTIONS ...
+export GLADIA_API_KEY=your_key
+
+gladia transcribe meeting.wav
+gladia transcribe audio.mp3 -o text
+gladia transcribe https://example.com/audio.mp3 -o json
 ```
 
+### Output formats
+
+| `-o` value   | Description                                      |
+|--------------|--------------------------------------------------|
+| `text`       | Plain transcript (default)                       |
+| `json`       | Simplified JSON (utterances with timing/speaker) |
+| `json-full`  | Full API response JSON                           |
+
+### Options
+
 ```bash
-./gladia --gladia-key MY_GLADIA_KEY --save-gladia-key
+gladia transcribe <source> [flags]
+
+Flags:
+  -o, --output string   Output format: text, json, json-full (default "text")
+  -v, --verbose         Show progress while transcribing
+      --diarize         Enable speaker diarization
+      --gladia-key      API key (fallback after env and ~/.gladia)
 ```
+
+## Development
+
+```bash
+make build    # build ./gladia
+make dist     # cross-compile to dist/
+make test     # run tests
+```
+
+## License
+
+See [LICENSE](LICENSE).
