@@ -28,8 +28,9 @@ Examples:
   gladia transcribe meeting.wav
   gladia transcribe audio.mp3 -o text
   gladia transcribe podcast.mp3 --language en
+  gladia transcribe interview.mp3 --code-switching
   gladia transcribe interview.mp3 --language en,fr,de
-  gladia transcribe call.wav --language en,fr --code-switching -o json
+  gladia transcribe call.wav --code-switch --language en -o json
   gladia transcribe call.wav --diarize -o srt
   gladia transcribe https://example.com/audio.mp3 -o json`,
 		Args: cobra.ExactArgs(1),
@@ -86,8 +87,8 @@ Examples:
 	}
 
 	cmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Output format: text, json, json-full, srt, vtt")
-	cmd.Flags().StringVar(&languageFlag, "language", "", "Language(s) as comma-separated ISO codes: en (single) or en,fr,de (code switching)")
-	cmd.Flags().BoolVar(&codeSwitching, "code-switching", false, "Enable code switching (requires 2+ languages in --language; auto-on when multiple are set)")
+	cmd.Flags().StringVar(&languageFlag, "language", "", "Optional ISO 639-1 code(s), comma-separated (e.g. en or en,fr,de)")
+	cmd.Flags().BoolVar(&codeSwitching, "code-switching", false, "Enable code switching (detect language per utterance; optional --language hints)")
 	cmd.Flags().BoolVar(&codeSwitching, "code-switch", false, "Alias for --code-switching")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show progress while transcribing")
 	cmd.Flags().BoolVar(&diarization, "diarize", false, "Enable speaker diarization")
@@ -96,10 +97,7 @@ Examples:
 }
 
 func buildLanguageConfig(langs []types.Language, codeSwitching, codeSwitchSet bool) (*gladia.LanguageConfig, error) {
-	if len(langs) == 0 {
-		if codeSwitchSet && codeSwitching {
-			return nil, fmt.Errorf("code switching requires multiple languages: --language en,fr,de")
-		}
+	if len(langs) == 0 && !codeSwitchSet {
 		return nil, nil
 	}
 
@@ -110,18 +108,14 @@ func buildLanguageConfig(langs []types.Language, codeSwitching, codeSwitchSet bo
 
 	cfg := &gladia.LanguageConfig{Languages: codes}
 
-	// Multiple languages → code switching (Gladia detects language per utterance).
-	if len(langs) >= 2 {
-		if codeSwitchSet && !codeSwitching {
-			return nil, fmt.Errorf("code switching cannot be disabled when 2+ languages are set (use a single --language code instead)")
-		}
-		cfg.CodeSwitching = true
+	if codeSwitchSet {
+		cfg.CodeSwitching = codeSwitching
 		return cfg, nil
 	}
 
-	// Single language.
-	if codeSwitchSet && codeSwitching {
-		return nil, fmt.Errorf("code switching requires at least 2 languages: --language en,fr,de")
+	// When several languages are listed, enable code switching by default.
+	if len(langs) >= 2 {
+		cfg.CodeSwitching = true
 	}
 
 	return cfg, nil

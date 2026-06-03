@@ -65,19 +65,21 @@ With `--diarize`, `text`, `srt`, and `vtt` include speaker labels.
 
 | Scenario | Command |
 |----------|---------|
-| Auto-detect | Omit `--language` |
+| Auto-detect | Omit `--language` and `--code-switching` |
 | Single language | `--language en` |
-| **Code switching** (2+ languages in the same audio) | `--language en,fr,de` |
+| Code switching (no language hint) | `--code-switching` |
+| Code switching + one language | `--code-switching --language en` |
+| Code switching + several languages | `--language en,fr,de` (or add `--code-switching`) |
 
-For **code switching**, pass **several comma-separated ISO codes** (2–5 recommended, e.g. `en,fr,de`). The CLI sends `language_config.languages` and turns on `code_switching` automatically — you do **not** need `--code-switching` unless you want to be explicit:
+`--language` is optional with code switching. You can pass zero, one, or several comma-separated ISO codes as hints. Listing **2–5 expected codes** (e.g. `en,fr,de`) improves accuracy; with multiple codes, code switching is turned on automatically.
 
 ```bash
+gladia transcribe interview.mp3 --code-switching
+gladia transcribe interview.mp3 --code-switching --language en
 gladia transcribe interview.mp3 --language en,fr,de
-# equivalent:
-gladia transcribe interview.mp3 --language en,fr,de --code-switching
 ```
 
-`--code-switch` is an alias for `--code-switching`. Both require **at least two** languages in `--language`.
+`--code-switch` is an alias for `--code-switching`.
 
 ### Options
 
@@ -86,8 +88,8 @@ gladia transcribe <source> [flags]
 
 Flags:
   -o, --output string       Output format: text, json, json-full, srt, vtt (default "text")
-      --language string     ISO codes: en (single) or en,fr,de (code switching)
-      --code-switching      Force code switching (needs 2+ languages in --language)
+      --language string     Optional ISO codes, comma-separated (e.g. en or en,fr,de)
+      --code-switching      Detect language per utterance
       --code-switch         Alias for --code-switching
   -v, --verbose             Show progress while transcribing
       --diarize             Enable speaker diarization
