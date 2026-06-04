@@ -31,15 +31,17 @@ type LanguageConfig struct {
 	CodeSwitching bool     `json:"code_switching,omitempty"`
 }
 
+type DiarizationConfig struct {
+	MinSpeakers      int `json:"min_speakers,omitempty"`
+	MaxSpeakers      int `json:"max_speakers,omitempty"`
+	NumberOfSpeakers int `json:"number_of_speakers,omitempty"`
+}
+
 type TranscriptionRequest struct {
 	AudioURL          string `json:"audio_url"`
 	LanguageConfig    *LanguageConfig `json:"language_config,omitempty"`
-	Diarization       bool   `json:"diarization"`
-	DiarizationConfig struct {
-		MinSpeakers      int `json:"min_speakers"`
-		MaxSpeakers      int `json:"max_speakers"`
-		NumberOfSpeakers int `json:"number_of_speakers"`
-	} `json:"diarization_config"`
+	Diarization       bool            `json:"diarization,omitempty"`
+	DiarizationConfig *DiarizationConfig `json:"diarization_config,omitempty"`
 	Summarization       bool                 `json:"summarization"`
 	SummarizationConfig *SummarizationConfig `json:"summarization_config"`
 	Translation         bool                 `json:"translation"`

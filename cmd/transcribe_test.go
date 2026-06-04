@@ -261,6 +261,73 @@ func TestTranscribeCommand_codeSwitchingWithoutLanguages(t *testing.T) {
 	}
 }
 
+func TestTranscribeCommand_diarizationRequestBody(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "test-key")
+
+	var postedBody map[string]interface{}
+	donePayload := sampleTranscriptionResult()
+	donePayload.Status = "done"
+	doneBody, _ := json.Marshal(donePayload)
+
+	server := httptest.NewServer(nil)
+	base := server.URL
+	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+			_ = json.NewDecoder(r.Body).Decode(&postedBody)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
+		case r.Method == http.MethodGet:
+			_, _ = w.Write(doneBody)
+		}
+	})
+	defer server.Close()
+
+	oldEndpoint := gladia.GladiaApiEndpoint
+	gladia.GladiaApiEndpoint = server.URL
+	t.Cleanup(func() { gladia.GladiaApiEndpoint = oldEndpoint })
+
+	run := func(args ...string) {
+		t.Helper()
+		postedBody = nil
+		cmd := newRootCmd()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs(append([]string{"transcribe", "https://example.com/audio.wav"}, args...))
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("execute: %v", err)
+		}
+	}
+
+	t.Run("without --diarize", func(t *testing.T) {
+		run()
+		if _, ok := postedBody["diarization"]; ok {
+			t.Fatalf("diarization present: %#v", postedBody)
+		}
+		if _, ok := postedBody["diarization_config"]; ok {
+			t.Fatalf("diarization_config present: %#v", postedBody)
+		}
+	})
+
+	t.Run("with --diarize", func(t *testing.T) {
+		run("--diarize")
+		if postedBody["diarization"] != true {
+			t.Fatalf("diarization = %v", postedBody["diarization"])
+		}
+		cfg, ok := postedBody["diarization_config"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("diarization_config missing: %#v", postedBody)
+		}
+		if cfg["min_speakers"] != float64(1) || cfg["max_speakers"] != float64(8) {
+			t.Fatalf("speaker range = %v", cfg)
+		}
+		if _, ok := cfg["number_of_speakers"]; ok {
+			t.Fatalf("number_of_speakers should be omitted: %v", cfg)
+		}
+	})
+}
+
 func TestTranscribeCommand_languageAndCodeSwitching(t *testing.T) {
 	withTempHome(t)
 	t.Setenv(envGladiaAPIKey, "test-key")

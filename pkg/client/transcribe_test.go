@@ -154,6 +154,56 @@ func TestDecodeAPIError(t *testing.T) {
 	}
 }
 
+func TestTranscriptionRequest_marshalDiarization(t *testing.T) {
+	t.Run("omits diarization when disabled", func(t *testing.T) {
+		data, err := json.Marshal(TranscriptionRequest{AudioURL: "https://a"})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var body map[string]interface{}
+		if err := json.Unmarshal(data, &body); err != nil {
+			t.Fatal(err)
+		}
+		if _, ok := body["diarization"]; ok {
+			t.Fatalf("diarization present: %v", body)
+		}
+		if _, ok := body["diarization_config"]; ok {
+			t.Fatalf("diarization_config present: %v", body)
+		}
+	})
+
+	t.Run("includes range without number_of_speakers", func(t *testing.T) {
+		data, err := json.Marshal(TranscriptionRequest{
+			AudioURL:    "https://a",
+			Diarization: true,
+			DiarizationConfig: &DiarizationConfig{
+				MinSpeakers: 1,
+				MaxSpeakers: 8,
+			},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		var body map[string]interface{}
+		if err := json.Unmarshal(data, &body); err != nil {
+			t.Fatal(err)
+		}
+		if body["diarization"] != true {
+			t.Fatalf("diarization = %v", body["diarization"])
+		}
+		cfg, ok := body["diarization_config"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("diarization_config = %v", body["diarization_config"])
+		}
+		if cfg["min_speakers"] != float64(1) || cfg["max_speakers"] != float64(8) {
+			t.Fatalf("speaker range = %v", cfg)
+		}
+		if _, ok := cfg["number_of_speakers"]; ok {
+			t.Fatalf("number_of_speakers should be omitted: %v", cfg)
+		}
+	})
+}
+
 func TestSummarizationConfig_validate(t *testing.T) {
 	if err := (&SummarizationConfig{Type: "general"}).ValidateSummarizationType(); err != nil {
 		t.Fatal(err)

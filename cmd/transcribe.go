@@ -65,15 +65,12 @@ Examples:
 			transcriptionReq := gladia.TranscriptionRequest{
 				LanguageConfig: langConfig,
 				Diarization:    diarization,
-				DiarizationConfig: struct {
-					MinSpeakers      int `json:"min_speakers"`
-					MaxSpeakers      int `json:"max_speakers"`
-					NumberOfSpeakers int `json:"number_of_speakers"`
-				}{
-					MinSpeakers:      1,
-					MaxSpeakers:      8,
-					NumberOfSpeakers: 4,
-				},
+			}
+			if diarization {
+				transcriptionReq.DiarizationConfig = &gladia.DiarizationConfig{
+					MinSpeakers: 1,
+					MaxSpeakers: 8,
+				}
 			}
 
 			result, err := client.TranscribeAudioURL(audioURL, transcriptionReq)
