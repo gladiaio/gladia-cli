@@ -1,109 +1,96 @@
 # gladia-cli
 
-Command-line tool for Gladia pre-recorded speech-to-text (v2 API).
+Transcribe audio files with the [Gladia](https://www.gladia.io/) pre-recorded API (v2).
 
 ## Install
 
-### Pre-built binaries
-
-Download from [GitHub releases](https://github.com/gladiaio/gladia-cli/releases) or build from source:
-
 ```bash
-make build
+make build   # → ./gladia
 ```
 
-The binary is written to `./gladia`.
+Or download a binary from [GitHub releases](https://github.com/gladiaio/gladia-cli/releases).
 
-## Authentication
+## Setup
 
-Credentials are resolved in this order:
-
-1. `GLADIA_API_KEY` environment variable
-2. `~/.gladia` file
-3. `--gladia-key` flag
-
-Save a key to disk:
-
-```bash
-gladia auth set YOUR_API_KEY
-```
-
-Get a key at [app.gladia.io/account](https://app.gladia.io/account).
-
-## Quickstart
+Get an API key at [app.gladia.io/account](https://app.gladia.io/account), then either:
 
 ```bash
 export GLADIA_API_KEY=your_key
-
-gladia transcribe meeting.wav
-gladia transcribe audio.mp3 -o text
-gladia transcribe podcast.mp3 --language en
-gladia transcribe interview.mp3 --language en,fr,de
-gladia transcribe call.wav --diarize -o srt
-gladia transcribe https://example.com/audio.mp3 -o json
+# or
+./gladia auth set your_key   # saves to ~/.gladia (mode 0600)
 ```
 
-List supported language codes:
+**Credential order:** `GLADIA_API_KEY` → `~/.gladia` → `--gladia-key`
+
+## Usage
 
 ```bash
-gladia languages
+./gladia transcribe <file-or-url> [flags]
 ```
 
-### Output formats
-
-| `-o` value   | Description                                      |
-|--------------|--------------------------------------------------|
-| `text`       | Plain transcript (default)                       |
-| `json`       | Simplified JSON (utterances with timing/speaker) |
-| `json-full`  | Full API response JSON                           |
-| `srt`        | SubRip subtitles (from utterances)                 |
-| `vtt`        | WebVTT subtitles (from utterances)               |
-
-With `--diarize`, `text`, `srt`, and `vtt` include speaker labels.
-
-### Language & code switching
-
-| Scenario | Command |
-|----------|---------|
-| Auto-detect | Omit `--language` and `--code-switching` |
-| Single language | `--language en` |
-| Code switching (no language hint) | `--code-switching` |
-| Code switching + one language | `--code-switching --language en` |
-| Code switching + several languages | `--language en,fr,de` (or add `--code-switching`) |
-
-`--language` is optional with code switching. You can pass zero, one, or several comma-separated ISO codes as hints. Listing **2–5 expected codes** (e.g. `en,fr,de`) improves accuracy; with multiple codes, code switching is turned on automatically.
+**Examples**
 
 ```bash
-gladia transcribe interview.mp3 --code-switching
-gladia transcribe interview.mp3 --code-switching --language en
-gladia transcribe interview.mp3 --language en,fr,de
+./gladia transcribe meeting.wav
+./gladia transcribe https://example.com/audio.mp3 -o json
+./gladia transcribe podcast.mp3 --language en,fr,de
+./gladia transcribe mixed.mp3 --code-switching --language en,fr
+./gladia transcribe call.wav --diarize -o srt
 ```
 
-`--code-switch` is an alias for `--code-switching`.
+## Commands
 
-### Options
+| Command | Description |
+|---------|-------------|
+| `transcribe <source>` | Transcribe an audio |
+| `auth set <key>` | Save API key to `~/.gladia` |
+| `languages` | List supported ISO 639-1 codes |
+
+## Flags (`transcribe`)
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `-o`, `--output` | `text` | Output: `text`, `json`, `json-full`, `srt`, `vtt` |
+| `--language` | — | Expected language(s), comma-separated (`en` or `en,fr,de`) |
+| `--code-switching`, `--code-switch` | off | Detect language per utterance |
+| `--diarize` | off | **Optional.** Identify speakers in the transcript |
+| `-v`, `--verbose` | off | Show progress while polling |
+
+**Global flag** (any command): `--gladia-key` — API key if not in env or `~/.gladia`
+
+## Language
+
+| Goal | What to run |
+|------|-------------|
+| Auto-detect | `transcribe <source>` |
+| Constrain detection | `--language en,fr,de` (no code switching) |
+| Code switching | `--code-switching` (+ optional `--language` hints) |
+
+- **`--language`** — tells Gladia which language(s) to expect. Several codes (`en,fr,de`) narrow detection; they do **not** turn on code switching.
+- **`--code-switching`** — separate option: re-detect language on each utterance. Combine with `--language` when you know which languages may appear.
 
 ```bash
-gladia transcribe <source> [flags]
-
-Flags:
-  -o, --output string       Output format: text, json, json-full, srt, vtt (default "text")
-      --language string     Optional ISO codes, comma-separated (e.g. en or en,fr,de)
-      --code-switching      Detect language per utterance
-      --code-switch         Alias for --code-switching
-  -v, --verbose             Show progress while transcribing
-      --diarize             Enable speaker diarization
-      --gladia-key          API key (fallback after env and ~/.gladia)
+./gladia languages   # list valid codes
 ```
 
-## Development
+## Diarization (optional)
+
+Use **`--diarize`** when you need **who spoke when**. Off by default.
+
+- Works with any output format; most useful with `-o text`, `srt`, or `vtt`.
+- Speaker labels are included in the output (e.g. `Speaker 0: …`).
 
 ```bash
-make build    # build ./gladia
-make dist     # cross-compile to dist/
-make test     # run tests
+./gladia transcribe meeting.wav --diarize
+./gladia transcribe panel.mp3 --diarize -o srt
+```
+
+## Develop
+
+```bash
+make build && make test && make dist
 ```
 
 ## License
 
-See [LICENSE](LICENSE).
+[MIT](LICENSE)
