@@ -88,7 +88,7 @@ Examples:
 
 	cmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Output format: text, json, json-full, srt, vtt")
 	cmd.Flags().StringVar(&languageFlag, "language", "", "Optional ISO 639-1 code(s), comma-separated (e.g. en or en,fr,de)")
-	cmd.Flags().BoolVar(&codeSwitching, "code-switching", false, "Enable code switching (detect language per utterance; optional --language hints)")
+	cmd.Flags().BoolVar(&codeSwitching, "code-switching", false, "Enable code switching (detect language per utterance; independent of --language)")
 	cmd.Flags().BoolVar(&codeSwitching, "code-switch", false, "Alias for --code-switching")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show progress while transcribing")
 	cmd.Flags().BoolVar(&diarization, "diarize", false, "Enable speaker diarization")
@@ -110,12 +110,6 @@ func buildLanguageConfig(langs []types.Language, codeSwitching, codeSwitchSet bo
 
 	if codeSwitchSet {
 		cfg.CodeSwitching = codeSwitching
-		return cfg, nil
-	}
-
-	// When several languages are listed, enable code switching by default.
-	if len(langs) >= 2 {
-		cfg.CodeSwitching = true
 	}
 
 	return cfg, nil

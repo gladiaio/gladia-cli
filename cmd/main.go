@@ -9,7 +9,7 @@ import (
 
 var rootGladiaKey string
 
-func main() {
+func newRootCmd() *cobra.Command {
 	rootCmd := &cobra.Command{
 		Use:   "gladia",
 		Short: "Gladia speech-to-text CLI",
@@ -22,7 +22,11 @@ func main() {
 	rootCmd.AddCommand(newAuthCmd())
 	rootCmd.AddCommand(newLanguagesCmd())
 
-	if err := rootCmd.Execute(); err != nil {
+	return rootCmd
+}
+
+func main() {
+	if err := newRootCmd().Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
 	}
