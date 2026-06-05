@@ -15,6 +15,17 @@ import (
 	"github.com/gladiaio/gladia-cli/pkg/client/types"
 )
 
+func TestValidateModel(t *testing.T) {
+	for _, model := range []string{"", "solaria-1", "solaria-3"} {
+		if err := validateModel(model); err != nil {
+			t.Errorf("model %q: %v", model, err)
+		}
+	}
+	if err := validateModel("solaria-2"); err == nil {
+		t.Fatal("expected error for unknown model")
+	}
+}
+
 func TestValidateOutputFormat(t *testing.T) {
 	valid := []string{"text", "txt", "json", "json-full", "srt", "vtt"}
 	for _, format := range valid {
@@ -158,6 +169,20 @@ func TestTranscribeCommand_invalidOutputFormat(t *testing.T) {
 	}
 }
 
+func TestTranscribeCommand_invalidModel(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "k")
+
+	cmd := newRootCmd()
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	cmd.SetArgs([]string{"transcribe", "https://example.com/a.wav", "--model", "solaria-2"})
+
+	if err := cmd.Execute(); err == nil {
+		t.Fatal("expected error for invalid model")
+	}
+}
+
 func TestTranscribeCommand_invalidLanguage(t *testing.T) {
 	withTempHome(t)
 	t.Setenv(envGladiaAPIKey, "k")
@@ -259,6 +284,60 @@ func TestTranscribeCommand_codeSwitchingWithoutLanguages(t *testing.T) {
 	if len(langs) != 0 {
 		t.Fatalf("languages = %v, want empty slice", lc["languages"])
 	}
+}
+
+func TestTranscribeCommand_modelRequestBody(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "test-key")
+
+	var postedBody map[string]interface{}
+	donePayload := sampleTranscriptionResult()
+	donePayload.Status = "done"
+	doneBody, _ := json.Marshal(donePayload)
+
+	server := httptest.NewServer(nil)
+	base := server.URL
+	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+			_ = json.NewDecoder(r.Body).Decode(&postedBody)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
+		case r.Method == http.MethodGet:
+			_, _ = w.Write(doneBody)
+		}
+	})
+	defer server.Close()
+
+	oldEndpoint := gladia.GladiaApiEndpoint
+	gladia.GladiaApiEndpoint = server.URL
+	t.Cleanup(func() { gladia.GladiaApiEndpoint = oldEndpoint })
+
+	run := func(args ...string) {
+		t.Helper()
+		postedBody = nil
+		cmd := newRootCmd()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs(append([]string{"transcribe", "https://example.com/audio.wav"}, args...))
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("execute: %v", err)
+		}
+	}
+
+	t.Run("without --model", func(t *testing.T) {
+		run()
+		if _, ok := postedBody["model"]; ok {
+			t.Fatalf("model present: %#v", postedBody)
+		}
+	})
+
+	t.Run("with --model solaria-3", func(t *testing.T) {
+		run("--model", "solaria-3")
+		if postedBody["model"] != "solaria-3" {
+			t.Fatalf("model = %v", postedBody["model"])
+		}
+	})
 }
 
 func TestTranscribeCommand_diarizationRequestBody(t *testing.T) {

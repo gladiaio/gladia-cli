@@ -36,6 +36,7 @@ export GLADIA_API_KEY=your_key
 ./gladia transcribe podcast.mp3 --language en,fr,de
 ./gladia transcribe mixed.mp3 --code-switching --language en,fr
 ./gladia transcribe call.wav --diarize -o srt
+./gladia transcribe podcast.mp3 --model solaria-3
 ```
 
 ## Commands
@@ -54,6 +55,7 @@ export GLADIA_API_KEY=your_key
 | `--language` | — | Expected language(s), comma-separated (`en` or `en,fr,de`) |
 | `--code-switching`, `--code-switch` | off | Detect language per utterance |
 | `--diarize` | off | **Optional.** Identify speakers in the transcript |
+| `--model` | — | STT model: `solaria-1` or `solaria-3` (default: API default) |
 | `-v`, `--verbose` | off | Show progress while polling |
 
 **Global flag** (any command): `--gladia-key` — API key if not in env or `~/.gladia`

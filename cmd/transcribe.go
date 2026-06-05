@@ -17,6 +17,7 @@ func newTranscribeCmd() *cobra.Command {
 		codeSwitching bool
 		verbose       bool
 		diarization   bool
+		modelFlag     string
 	)
 
 	cmd := &cobra.Command{
@@ -32,10 +33,15 @@ Examples:
   gladia transcribe interview.mp3 --language en,fr,de
   gladia transcribe call.wav --code-switch --language en -o json
   gladia transcribe call.wav --diarize -o srt
+  gladia transcribe podcast.mp3 --model solaria-3
   gladia transcribe https://example.com/audio.mp3 -o json`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := validateOutputFormat(outputFormat); err != nil {
+				return err
+			}
+
+			if err := validateModel(modelFlag); err != nil {
 				return err
 			}
 
@@ -63,6 +69,7 @@ Examples:
 			}
 
 			transcriptionReq := gladia.TranscriptionRequest{
+				Model:          modelFlag,
 				LanguageConfig: langConfig,
 				Diarization:    diarization,
 			}
@@ -89,6 +96,7 @@ Examples:
 	cmd.Flags().BoolVar(&codeSwitching, "code-switch", false, "Alias for --code-switching")
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show progress while transcribing")
 	cmd.Flags().BoolVar(&diarization, "diarize", false, "Enable speaker diarization")
+	cmd.Flags().StringVar(&modelFlag, "model", "", "STT model: solaria-1 or solaria-3 (default: API default)")
 
 	return cmd
 }
@@ -118,6 +126,18 @@ func validateOutputFormat(format string) error {
 		return nil
 	default:
 		return fmt.Errorf("unknown output format %q (use text, json, json-full, srt, or vtt)", format)
+	}
+}
+
+func validateModel(model string) error {
+	if model == "" {
+		return nil
+	}
+	switch model {
+	case "solaria-1", "solaria-3":
+		return nil
+	default:
+		return fmt.Errorf("unknown model %q (use solaria-1 or solaria-3)", model)
 	}
 }
 

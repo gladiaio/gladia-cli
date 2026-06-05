@@ -39,6 +39,7 @@ type DiarizationConfig struct {
 
 type TranscriptionRequest struct {
 	AudioURL          string `json:"audio_url"`
+	Model             string `json:"model,omitempty"`
 	LanguageConfig    *LanguageConfig `json:"language_config,omitempty"`
 	Diarization       bool            `json:"diarization,omitempty"`
 	DiarizationConfig *DiarizationConfig `json:"diarization_config,omitempty"`
