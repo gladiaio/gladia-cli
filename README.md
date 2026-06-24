@@ -2,13 +2,22 @@
 
 Transcribe audio files with the [Gladia](https://www.gladia.io/) pre-recorded API (v2).
 
-## Install
+```bash
+# Linux / macOS
+VERSION=$(curl -fsSL https://api.github.com/repos/gladiaio/gladia-cli/releases/latest | sed -n 's/.*"tag_name": "v\(.*\)".*/\1/p')
+OS=$(uname -s | tr '[:upper:]' '[:lower:]')
+ARCH=$(uname -m); [ "$ARCH" = x86_64 ] && ARCH=amd64; [ "$ARCH" = aarch64 ] && ARCH=arm64
+curl -fsSL "https://github.com/gladiaio/gladia-cli/releases/download/v${VERSION}/gladia_${VERSION}_${OS}_${ARCH}.tar.gz" | tar xz
+sudo install gladia /usr/local/bin/
+```
+
+Other platforms and archives: [GitHub releases](https://github.com/gladiaio/gladia-cli/releases).
+
+## Install (from source)
 
 ```bash
 make build   # → ./gladia
 ```
-
-Or download a binary from [GitHub releases](https://github.com/gladiaio/gladia-cli/releases).
 
 ## Setup
 
