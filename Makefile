@@ -1,24 +1,25 @@
 
 build:
-	go build -o gladia -v ./cmd/*.go
+	go build -o gladia -v ./cmd/
 
 .PHONY: dist
 dist:
-	GOOS=linux GOARCH=arm GOARM=7 go build -o dist/gladia-linux-arm7 -v ./cmd/*.go
-	GOOS=linux GOARCH=arm64 go build -o dist/gladia-linux-arm64 -v ./cmd/*.go
-	GOOS=linux GOARCH=amd64 go build -o dist/gladia-linux-x86_64 -v ./cmd/*.go
-	GOOS=linux GOARCH=386 go build -o dist/gladia-linux-i386 -v ./cmd/*.go
-	GOOS=windows GOARCH=amd64 go build -o dist/gladia-windows-x86_64.exe -v ./cmd/*.go
-	GOOS=darwin GOARCH=amd64 go build -o dist/gladia-darwin-x86_64 -v ./cmd/*.go
-	GOOS=darwin GOARCH=arm64 go build -o dist/gladia-darwin-arm64 -v ./cmd/*.go
+	mkdir -p dist
+	GOOS=linux GOARCH=arm GOARM=7 go build -o dist/gladia-linux-arm7 -v ./cmd/
+	GOOS=linux GOARCH=arm64 go build -o dist/gladia-linux-arm64 -v ./cmd/
+	GOOS=linux GOARCH=amd64 go build -o dist/gladia-linux-amd64 -v ./cmd/
+	GOOS=linux GOARCH=386 go build -o dist/gladia-linux-i386 -v ./cmd/
+	GOOS=windows GOARCH=amd64 go build -o dist/gladia-windows-amd64.exe -v ./cmd/
+	GOOS=darwin GOARCH=amd64 go build -o dist/gladia-darwin-amd64 -v ./cmd/
+	GOOS=darwin GOARCH=arm64 go build -o dist/gladia-darwin-arm64 -v ./cmd/
 
 	@echo "Dist files:"
 	@ls -l dist
 
 dev:
-	go run -x ./cmd/*.go -audio-file split_infinity.wav
+	go run ./cmd/ transcribe split_infinity.wav
 watch-dev:
-	go run -x ./cmd/*.go -audio-file split_infinity.wav
+	go run ./cmd/ transcribe split_infinity.wav
 
 test:
 	go test -race -v ./...

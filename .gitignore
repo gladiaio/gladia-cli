@@ -1,22 +1,4 @@
 #
-# PYTHON
-#
-
-# Ignore build files
-build/
-*.egg-info/
-
-# Ignore Python cache and compiled files
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-*.pyz
-
-# Ignore virtual environments
-venv/
-
-#
 # GOLANG
 #
 
@@ -53,3 +35,4 @@ cover.html
 .vscode
 
 .idea/
+gladia
