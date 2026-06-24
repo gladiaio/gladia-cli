@@ -1,17 +1,20 @@
 # gladia-cli
 
-Transcribe audio files with the [Gladia](https://www.gladia.io/) pre-recorded API (v2).
+## Install
+
+### macOS & Linux
 
 ```bash
-# Linux / macOS
-VERSION=$(curl -fsSL https://api.github.com/repos/gladiaio/gladia-cli/releases/latest | sed -n 's/.*"tag_name": "v\(.*\)".*/\1/p')
-OS=$(uname -s | tr '[:upper:]' '[:lower:]')
-ARCH=$(uname -m); [ "$ARCH" = x86_64 ] && ARCH=amd64; [ "$ARCH" = aarch64 ] && ARCH=arm64
-curl -fsSL "https://github.com/gladiaio/gladia-cli/releases/download/v${VERSION}/gladia_${VERSION}_${OS}_${ARCH}.tar.gz" | tar xz
-sudo install gladia /usr/local/bin/
+curl -fsSL https://github.com/gladiaio/gladia-cli/releases/latest/download/install.sh | sh
 ```
 
-Other platforms and archives: [GitHub releases](https://github.com/gladiaio/gladia-cli/releases).
+### Windows
+
+```powershell
+powershell -c "irm https://github.com/gladiaio/gladia-cli/releases/latest/download/install.ps1 | iex"
+```
+
+Other platforms: [GitHub releases](https://github.com/gladiaio/gladia-cli/releases).
 
 ## Install (from source)
 

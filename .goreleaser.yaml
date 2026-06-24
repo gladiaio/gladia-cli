@@ -62,3 +62,6 @@ release:
     name: gladia-cli
   draft: false
   prerelease: auto
+  extra_files:
+    - glob: install.sh
+    - glob: install.ps1
