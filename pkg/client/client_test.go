@@ -9,7 +9,7 @@ func TestGladiaClient_apiURL(t *testing.T) {
 	}
 
 	c.GladiaEndpoint = "https://api.gladia.io/"
-	if got := c.apiURL("/v2/transcription/"); got != "https://api.gladia.io/v2/transcription/" {
+	if got := c.apiURL("/v2/pre-recorded"); got != "https://api.gladia.io/v2/pre-recorded" {
 		t.Fatalf("got %q", got)
 	}
 }

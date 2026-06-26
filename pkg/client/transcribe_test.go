@@ -69,7 +69,7 @@ func TestTranscribeAudioURL_success(t *testing.T) {
 	base := server.URL
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
 			_ = json.NewDecoder(r.Body).Decode(&posted)
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(TranscriptionResponse{ResultURL: base + "/poll"})
