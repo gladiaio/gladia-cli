@@ -109,8 +109,8 @@ func TestTranscribeAudioURL_apiValidationError(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"message":            "validation failed",
-			"validation_errors":  []string{"bad field"},
+			"message":           "validation failed",
+			"validation_errors": []string{"bad field"},
 		})
 	}))
 	defer server.Close()

@@ -399,22 +399,44 @@ func TestTranscribeCommand_codeSwitchingWithoutLanguages(t *testing.T) {
 	gladia.GladiaApiEndpoint = server.URL
 	t.Cleanup(func() { gladia.GladiaApiEndpoint = oldEndpoint })
 
-	cmd := newRootCmd()
-	cmd.SetOut(io.Discard)
-	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{"transcribe", "https://example.com/audio.wav", "--code-switching"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Fatal(err)
+	run := func(args ...string) {
+		t.Helper()
+		postedBody = nil
+		cmd := newRootCmd()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs(append([]string{"transcribe", "https://example.com/audio.wav"}, args...))
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("execute: %v", err)
+		}
 	}
 
-	lc := postedBody["language_config"].(map[string]interface{})
-	if lc["code_switching"] != true {
-		t.Fatalf("code_switching = %v", lc["code_switching"])
+	assertCodeSwitchingPayload := func(t *testing.T) {
+		t.Helper()
+		lc, ok := postedBody["language_config"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("language_config missing in %#v", postedBody)
+		}
+		if lc["code_switching"] != true {
+			t.Fatalf("code_switching = %v, want true", lc["code_switching"])
+		}
+		langs, _ := lc["languages"].([]interface{})
+		if len(langs) != 0 {
+			t.Fatalf("languages = %v, want empty slice", lc["languages"])
+		}
 	}
-	langs, _ := lc["languages"].([]interface{})
-	if len(langs) != 0 {
-		t.Fatalf("languages = %v, want empty slice", lc["languages"])
+
+	for _, tc := range []struct {
+		name string
+		args []string
+	}{
+		{name: "--code-switching", args: []string{"--code-switching"}},
+		{name: "--cs", args: []string{"--cs"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			run(tc.args...)
+			assertCodeSwitchingPayload(t)
+		})
 	}
 }
 
