@@ -431,7 +431,7 @@ func TestTranscribeCommand_codeSwitchingWithoutLanguages(t *testing.T) {
 		args []string
 	}{
 		{name: "--code-switching", args: []string{"--code-switching"}},
-		{name: "--cs", args: []string{"--cs"}},
+		{name: "-cs", args: []string{"-cs"}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			run(tc.args...)

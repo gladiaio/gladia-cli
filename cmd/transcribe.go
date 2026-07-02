@@ -31,7 +31,7 @@ Examples:
   gladia transcribe podcast.mp3 --language en
   gladia transcribe interview.mp3 --code-switching
   gladia transcribe interview.mp3 --language en,fr,de
-  gladia transcribe call.wav --cs --language en -o json
+  gladia transcribe call.wav -cs --language en -o json
   gladia transcribe call.wav --diarize -o srt
   gladia transcribe podcast.mp3 --model solaria-3 --language en
   gladia transcribe https://example.com/audio.mp3 -o json`,
@@ -119,7 +119,7 @@ Examples:
 {{.Example}}{{end}}{{if .HasAvailableLocalFlags}}
 
 Flags:
-      --cs, --code-switching   — ` + codeSwitchingUsage + `
+      -cs, --code-switching   — ` + codeSwitchingUsage + `
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 Global Flags:
