@@ -31,7 +31,7 @@ Examples:
   gladia transcribe podcast.mp3 --language en
   gladia transcribe interview.mp3 --code-switching
   gladia transcribe interview.mp3 --language en,fr,de
-  gladia transcribe call.wav -cs --language en -o json
+  gladia transcribe call.wav --cs --language en -o json
   gladia transcribe call.wav --diarize -o srt
   gladia transcribe podcast.mp3 --model solaria-3 --language en
   gladia transcribe https://example.com/audio.mp3 -o json`,
@@ -100,8 +100,8 @@ Examples:
 	cmd.Flags().StringVarP(&outputFormat, "output", "o", "text", "Output format: text, json, json-full, srt, vtt")
 	cmd.Flags().StringVar(&languageFlag, "language", "", "Expected language(s), comma-separated (e.g. en or en,fr,de); does not enable code switching")
 	const codeSwitchingUsage = "Re-detect language on each utterance (for mixed-language audio; solaria-1 only)"
-	cmd.Flags().BoolVar(&codeSwitching, "cs", false, codeSwitchingUsage)
 	cmd.Flags().BoolVar(&codeSwitching, "code-switching", false, codeSwitchingUsage)
+	cmd.Flags().BoolVar(&codeSwitching, "cs", false, codeSwitchingUsage)
 	cmd.Flags().Lookup("cs").Hidden = true
 	cmd.Flags().Lookup("code-switching").Hidden = true
 	cmd.Flags().BoolVarP(&verbose, "verbose", "v", false, "Show progress while transcribing")
@@ -119,7 +119,7 @@ Examples:
 {{.Example}}{{end}}{{if .HasAvailableLocalFlags}}
 
 Flags:
-      -cs, --code-switching   — ` + codeSwitchingUsage + `
+      --cs, --code-switching   — ` + codeSwitchingUsage + `
 {{.LocalFlags.FlagUsages | trimTrailingWhitespaces}}{{end}}{{if .HasAvailableInheritedFlags}}
 
 Global Flags:

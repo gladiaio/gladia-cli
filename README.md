@@ -65,7 +65,7 @@ export GLADIA_API_KEY=your_key
 |------|---------|-------------|
 | `-o`, `--output` | `text` | Output: `text`, `json`, `json-full`, `srt`, `vtt` |
 | `--language` | — | Expected language(s), comma-separated (`en` or `en,fr,de`); narrows detection, does not enable code switching |
-| `-cs`, `--code-switching` | off | Re-detect language on each utterance (mixed-language audio; solaria-1 only) |
+| `--cs`, `--code-switching` | off | Re-detect language on each utterance (mixed-language audio; solaria-1 only) |
 | `--diarize` | off | **Optional.** Identify speakers in the transcript |
 | `--model` | — | STT model: `solaria-1` or `solaria-3`. Solaria-3 accepts at most one `--language` (`en`, `fr`, `de`, `es`, or `it`) and does not support code switching. |
 | `-v`, `--verbose` | off | Show progress while polling |
@@ -78,10 +78,10 @@ export GLADIA_API_KEY=your_key
 |------|-------------|
 | Auto-detect | `transcribe <source>` |
 | Constrain detection | `--language en,fr,de` (no code switching) |
-| Code switching | `-cs` or `--code-switching` (+ optional `--language` hints) |
+| Code switching | `--cs` or `--code-switching` (+ optional `--language` hints) |
 
 - **`--language`** — limits which language(s) Gladia considers (`en,fr,de` is a hint list, not per-utterance switching).
-- **`-cs`** / **`--code-switching`** — turns on per-utterance language detection. Add `--language` to restrict which languages may appear. Not available with `solaria-3`.
+- **`--cs`** / **`--code-switching`** — turns on per-utterance language detection. Add `--language` to restrict which languages may appear. Not available with `solaria-3`.
 
 ```bash
 ./gladia languages   # list valid codes
