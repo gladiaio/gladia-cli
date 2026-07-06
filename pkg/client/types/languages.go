@@ -295,230 +295,56 @@ func allInputLanguages() []Language {
 	}
 }
 
-func DisplayAllInputLanguagesNames() (string, error) {
-	// Slice of all TargetLanguage constants
-	allLanguages := []TargetLanguage{
-		TargetLanguageAf,
-		TargetLanguageSq,
-		TargetLanguageAm,
-		TargetLanguageAr,
-		TargetLanguageHy,
-		TargetLanguageAs,
-		TargetLanguageAz,
-		TargetLanguageBa,
-		TargetLanguageEu,
-		TargetLanguageBe,
-		TargetLanguageBn,
-		TargetLanguageBs,
-		TargetLanguageBr,
-		TargetLanguageBg,
-		TargetLanguageCa,
-		TargetLanguageZh,
-		TargetLanguageHr,
-		TargetLanguageCs,
-		TargetLanguageDa,
-		TargetLanguageNl,
-		TargetLanguageEn,
-		TargetLanguageAt,
-		TargetLanguageFo,
-		TargetLanguageFi,
-		TargetLanguageFr,
-		TargetLanguageGl,
-		TargetLanguageKa,
-		TargetLanguageDe,
-		TargetLanguageEl,
-		TargetLanguageGu,
-		TargetLanguageHt,
-		TargetLanguageHa,
-		TargetLanguageHaw,
-		TargetLanguageHe,
-		TargetLanguageHi,
-		TargetLanguageHu,
-		TargetLanguageIs,
-		TargetLanguageId,
-		TargetLanguageIt,
-		TargetLanguageJp,
-		TargetLanguageJv,
-		TargetLanguageKn,
-		TargetLanguageKk,
-		TargetLanguageKm,
-		TargetLanguageKo,
-		TargetLanguageLo,
-		TargetLanguageLa,
-		TargetLanguageLv,
-		TargetLanguageLn,
-		TargetLanguageLt,
-		TargetLanguageLb,
-		TargetLanguageMk,
-		TargetLanguageMg,
-		TargetLanguageMs,
-		TargetLanguageMl,
-		TargetLanguageMt,
-		TargetLanguageMi,
-		TargetLanguageMr,
-		TargetLanguageMn,
-		TargetLanguageNe,
-		TargetLanguageNo,
-		TargetLanguageNn,
-		TargetLanguageOc,
-		TargetLanguagePs,
-		TargetLanguageFa,
-		TargetLanguagePl,
-		TargetLanguagePt,
-		TargetLanguagePa,
-		TargetLanguageRo,
-		TargetLanguageRu,
-		TargetLanguageSa,
-		TargetLanguageSr,
-		TargetLanguageSn,
-		TargetLanguageSd,
-		TargetLanguageSi,
-		TargetLanguageSk,
-		TargetLanguageSl,
-		TargetLanguageSo,
-		TargetLanguageEs,
-		TargetLanguageSu,
-		TargetLanguageSw,
-		TargetLanguageSv,
-		TargetLanguageTl,
-		TargetLanguageTg,
-		TargetLanguageTa,
-		TargetLanguageTt,
-		TargetLanguageTe,
-		TargetLanguageTh,
-		TargetLanguageBo,
-		TargetLanguageTr,
-		TargetLanguageTk,
-		TargetLanguageUk,
-		TargetLanguageUr,
-		TargetLanguageUz,
-		TargetLanguageVi,
-		TargetLanguageCy,
-		TargetLanguageYi,
+func allTargetLanguages() []TargetLanguage {
+	return []TargetLanguage{
+		TargetLanguageAf, TargetLanguageSq, TargetLanguageAm, TargetLanguageAr, TargetLanguageHy, TargetLanguageAs, TargetLanguageAz,
+		TargetLanguageBa, TargetLanguageEu, TargetLanguageBe, TargetLanguageBn, TargetLanguageBs, TargetLanguageBr, TargetLanguageBg,
+		TargetLanguageCa, TargetLanguageZh, TargetLanguageHr, TargetLanguageCs, TargetLanguageDa, TargetLanguageNl, TargetLanguageEn,
+		TargetLanguageAt, TargetLanguageFo, TargetLanguageFi, TargetLanguageFr, TargetLanguageGl, TargetLanguageKa, TargetLanguageDe,
+		TargetLanguageEl, TargetLanguageGu, TargetLanguageHt, TargetLanguageHa, TargetLanguageHaw, TargetLanguageHe, TargetLanguageHi,
+		TargetLanguageHu, TargetLanguageIs, TargetLanguageId, TargetLanguageIt, TargetLanguageJp, TargetLanguageJv, TargetLanguageKn,
+		TargetLanguageKk, TargetLanguageKm, TargetLanguageKo, TargetLanguageLo, TargetLanguageLa, TargetLanguageLv, TargetLanguageLn,
+		TargetLanguageLt, TargetLanguageLb, TargetLanguageMk, TargetLanguageMg, TargetLanguageMs, TargetLanguageMl, TargetLanguageMt,
+		TargetLanguageMi, TargetLanguageMr, TargetLanguageMn, TargetLanguageMymr, TargetLanguageNe, TargetLanguageNo, TargetLanguageNn,
+		TargetLanguageOc, TargetLanguagePs, TargetLanguageFa, TargetLanguagePl, TargetLanguagePt, TargetLanguagePa, TargetLanguageRo,
+		TargetLanguageRu, TargetLanguageSa, TargetLanguageSr, TargetLanguageSn, TargetLanguageSd, TargetLanguageSi, TargetLanguageSk,
+		TargetLanguageSl, TargetLanguageSo, TargetLanguageEs, TargetLanguageSu, TargetLanguageSw, TargetLanguageSv, TargetLanguageTl,
+		TargetLanguageTg, TargetLanguageTa, TargetLanguageTt, TargetLanguageTe, TargetLanguageTh, TargetLanguageBo, TargetLanguageTr,
+		TargetLanguageTk, TargetLanguageUk, TargetLanguageUr, TargetLanguageUz, TargetLanguageVi, TargetLanguageCy, TargetLanguageYi,
 		TargetLanguageYo,
 	}
+}
 
-	for _, langCode := range allLanguages {
-		tag, err := language.Parse(string(langCode))
-		if err != nil {
-			fmt.Printf("Error parsing language code '%s': %v\n", langCode, err)
-			continue
-		}
-		fmt.Printf("%s: %s\n", langCode, display.English.Tags().Name(tag))
+// gladiaLanguageDisplayTags maps Gladia API codes that are not valid BCP 47 tags
+// to a parseable tag used only for display names.
+var gladiaLanguageDisplayTags = map[string]string{
+	"at":   "ast", // Asturian
+	"jp":   "ja",  // Japanese
+	"mymr": "my",  // Burmese (Myanmar)
+}
+
+func displayLanguageName(code string) string {
+	parseCode := code
+	if tag, ok := gladiaLanguageDisplayTags[code]; ok {
+		parseCode = tag
+	}
+	tag, err := language.Parse(parseCode)
+	if err != nil {
+		return code
+	}
+	return display.English.Tags().Name(tag)
+}
+
+func DisplayAllInputLanguagesNames() (string, error) {
+	for _, lang := range allInputLanguages() {
+		fmt.Printf("%s: %s\n", lang, displayLanguageName(string(lang)))
 	}
 	return "", nil
 }
 
 func DisplayAllTargetLanguagesNames() (string, error) {
-	// Slice of all TargetLanguage constants
-	allLanguages := []TargetLanguage{
-		TargetLanguageAf,
-		TargetLanguageSq,
-		TargetLanguageAm,
-		TargetLanguageAr,
-		TargetLanguageHy,
-		TargetLanguageAs,
-		TargetLanguageAz,
-		TargetLanguageBa,
-		TargetLanguageEu,
-		TargetLanguageBe,
-		TargetLanguageBn,
-		TargetLanguageBs,
-		TargetLanguageBr,
-		TargetLanguageBg,
-		TargetLanguageCa,
-		TargetLanguageZh,
-		TargetLanguageHr,
-		TargetLanguageCs,
-		TargetLanguageDa,
-		TargetLanguageNl,
-		TargetLanguageEn,
-		TargetLanguageAt,
-		TargetLanguageFo,
-		TargetLanguageFi,
-		TargetLanguageFr,
-		TargetLanguageGl,
-		TargetLanguageKa,
-		TargetLanguageDe,
-		TargetLanguageEl,
-		TargetLanguageGu,
-		TargetLanguageHt,
-		TargetLanguageHa,
-		TargetLanguageHaw,
-		TargetLanguageHe,
-		TargetLanguageHi,
-		TargetLanguageHu,
-		TargetLanguageIs,
-		TargetLanguageId,
-		TargetLanguageIt,
-		TargetLanguageJp,
-		TargetLanguageJv,
-		TargetLanguageKn,
-		TargetLanguageKk,
-		TargetLanguageKm,
-		TargetLanguageKo,
-		TargetLanguageLo,
-		TargetLanguageLa,
-		TargetLanguageLv,
-		TargetLanguageLn,
-		TargetLanguageLt,
-		TargetLanguageLb,
-		TargetLanguageMk,
-		TargetLanguageMg,
-		TargetLanguageMs,
-		TargetLanguageMl,
-		TargetLanguageMt,
-		TargetLanguageMi,
-		TargetLanguageMr,
-		TargetLanguageMn,
-		TargetLanguageNe,
-		TargetLanguageNo,
-		TargetLanguageNn,
-		TargetLanguageOc,
-		TargetLanguagePs,
-		TargetLanguageFa,
-		TargetLanguagePl,
-		TargetLanguagePt,
-		TargetLanguagePa,
-		TargetLanguageRo,
-		TargetLanguageRu,
-		TargetLanguageSa,
-		TargetLanguageSr,
-		TargetLanguageSn,
-		TargetLanguageSd,
-		TargetLanguageSi,
-		TargetLanguageSk,
-		TargetLanguageSl,
-		TargetLanguageSo,
-		TargetLanguageEs,
-		TargetLanguageSu,
-		TargetLanguageSw,
-		TargetLanguageSv,
-		TargetLanguageTl,
-		TargetLanguageTg,
-		TargetLanguageTa,
-		TargetLanguageTt,
-		TargetLanguageTe,
-		TargetLanguageTh,
-		TargetLanguageBo,
-		TargetLanguageTr,
-		TargetLanguageTk,
-		TargetLanguageUk,
-		TargetLanguageUr,
-		TargetLanguageUz,
-		TargetLanguageVi,
-		TargetLanguageCy,
-		TargetLanguageYi,
-		TargetLanguageYo,
-	}
-
-	for _, langCode := range allLanguages {
-		tag, err := language.Parse(string(langCode))
-		if err != nil {
-			fmt.Printf("Error parsing language code '%s': %v\n", langCode, err)
-			continue
-		}
-		fmt.Printf("%s: %s\n", langCode, display.English.Tags().Name(tag))
+	for _, lang := range allTargetLanguages() {
+		fmt.Printf("%s: %s\n", lang, displayLanguageName(string(lang)))
 	}
 	return "", nil
 }

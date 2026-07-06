@@ -38,16 +38,16 @@ type DiarizationConfig struct {
 }
 
 type TranscriptionRequest struct {
-	AudioURL          string `json:"audio_url"`
-	Model             string `json:"model,omitempty"`
-	LanguageConfig    *LanguageConfig `json:"language_config,omitempty"`
-	Diarization       bool            `json:"diarization,omitempty"`
-	DiarizationConfig *DiarizationConfig `json:"diarization_config,omitempty"`
-	Summarization       bool                 `json:"summarization"`
-	SummarizationConfig *SummarizationConfig `json:"summarization_config"`
-	Translation         bool                 `json:"translation"`
-	TranslationConfig   *TranslationConfig   `json:"translation_config"`
-	CustomVocabulary    []string             `json:"custom_vocabulary"`
+	AudioURL            string               `json:"audio_url"`
+	Model               string               `json:"model,omitempty"`
+	LanguageConfig      *LanguageConfig      `json:"language_config,omitempty"`
+	Diarization         bool                 `json:"diarization,omitempty"`
+	DiarizationConfig   *DiarizationConfig   `json:"diarization_config,omitempty"`
+	Summarization       bool                 `json:"summarization,omitempty"`
+	SummarizationConfig *SummarizationConfig `json:"summarization_config,omitempty"`
+	Translation         bool                 `json:"translation,omitempty"`
+	TranslationConfig   *TranslationConfig   `json:"translation_config,omitempty"`
+	CustomVocabulary    []string             `json:"custom_vocabulary,omitempty"`
 }
 
 type TranslationConfig struct {
@@ -231,9 +231,8 @@ func (c *GladiaClient) UploadFile(filePath string) (string, error) {
 	return uploadResp.AudioURL, nil
 }
 
-// TranscribeAudioURL calls the /v2/transcription/ endpoint using the provided audioURL.
+// TranscribeAudioURL calls the /v2/pre-recorded endpoint using the provided audioURL.
 func (c *GladiaClient) TranscribeAudioURL(audioURL string, reqBody TranscriptionRequest) (*TranscriptionResult, error) {
-	// Set the audio URL in the request body. 
 	reqBody.AudioURL = audioURL
 
 	requestData, err := json.Marshal(reqBody)
@@ -241,7 +240,7 @@ func (c *GladiaClient) TranscribeAudioURL(audioURL string, reqBody Transcription
 		return nil, fmt.Errorf("failed to marshal transcription request: %w", err)
 	}
 
-	resp, err := c.createAndExecuteRequest("POST", c.apiURL("/v2/transcription/"), bytes.NewReader(requestData))
+	resp, err := c.createAndExecuteRequest("POST", c.apiURL("/v2/pre-recorded"), bytes.NewReader(requestData))
 	if err != nil {
 		return nil, fmt.Errorf("transcription request failed: %w", err)
 	}

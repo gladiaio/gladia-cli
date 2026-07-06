@@ -81,3 +81,27 @@ func TestParseLanguage_multipleRejected(t *testing.T) {
 		t.Fatal("expected error")
 	}
 }
+
+func TestDisplayLanguageName_gladiaCodes(t *testing.T) {
+	tests := map[string]string{
+		"at":   "Asturian",
+		"jp":   "Japanese",
+		"mymr": "Burmese",
+		"en":   "English",
+		"haw":  "Hawaiian",
+	}
+	for code, want := range tests {
+		if got := displayLanguageName(code); got != want {
+			t.Errorf("displayLanguageName(%q) = %q, want %q", code, got, want)
+		}
+	}
+}
+
+func TestDisplayLanguageName_allInputLanguages(t *testing.T) {
+	for _, lang := range allInputLanguages() {
+		name := displayLanguageName(string(lang))
+		if name == "" || name == string(lang) {
+			t.Errorf("no display name for %q", lang)
+		}
+	}
+}

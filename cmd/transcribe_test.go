@@ -16,13 +16,40 @@ import (
 )
 
 func TestValidateModel(t *testing.T) {
-	for _, model := range []string{"", "solaria-1", "solaria-3"} {
+	for _, model := range []string{"", "solaria-1", "solaria-3", "solaria 3", " Solaria-3 "} {
 		if err := validateModel(model); err != nil {
 			t.Errorf("model %q: %v", model, err)
 		}
 	}
 	if err := validateModel("solaria-2"); err == nil {
 		t.Fatal("expected error for unknown model")
+	}
+}
+
+func TestValidateModelConfig_solaria3(t *testing.T) {
+	en := types.LanguageEn
+	fr := types.LanguageFr
+	ja := types.LanguageJp
+
+	if err := validateModelConfig("solaria-3", []types.Language{en}, false, false); err != nil {
+		t.Fatalf("single supported language: %v", err)
+	}
+	if err := validateModelConfig("solaria-3", nil, false, false); err != nil {
+		t.Fatalf("no language should be allowed: %v", err)
+	}
+	if err := validateModelConfig("solaria-3", []types.Language{en, fr}, false, false); err == nil {
+		t.Fatal("expected error for multiple languages")
+	} else if !strings.Contains(err.Error(), "only one language") || !strings.Contains(err.Error(), "en, fr") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := validateModelConfig("solaria-3", []types.Language{ja}, false, false); err == nil {
+		t.Fatal("expected error for unsupported language")
+	}
+	if err := validateModelConfig("solaria-3", []types.Language{en}, true, true); err == nil {
+		t.Fatal("expected error for code switching")
+	}
+	if err := validateModelConfig("solaria-1", nil, false, false); err != nil {
+		t.Fatalf("solaria-1 should not require language: %v", err)
 	}
 }
 
@@ -183,6 +210,111 @@ func TestTranscribeCommand_invalidModel(t *testing.T) {
 	}
 }
 
+func TestTranscribeCommand_invalidSolaria3MultipleLanguages(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "k")
+
+	cmd := newRootCmd()
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	cmd.SetArgs([]string{"transcribe", "https://example.com/a.wav", "--model", "solaria-3", "--language", "en,fr"})
+
+	err := cmd.Execute()
+	if err == nil {
+		t.Fatal("expected error for solaria-3 with multiple languages")
+	}
+	if !strings.Contains(err.Error(), "only one language") || !strings.Contains(err.Error(), "en, fr") {
+		t.Fatalf("unexpected error: %v", err)
+	}
+}
+
+func TestTranscribeCommand_solaria3WithoutLanguage(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "test-key")
+
+	var postedBody map[string]interface{}
+	donePayload := sampleTranscriptionResult()
+	donePayload.Status = "done"
+	doneBody, _ := json.Marshal(donePayload)
+
+	server := httptest.NewServer(nil)
+	base := server.URL
+	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
+			_ = json.NewDecoder(r.Body).Decode(&postedBody)
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
+		case r.Method == http.MethodGet:
+			_, _ = w.Write(doneBody)
+		}
+	})
+	defer server.Close()
+
+	oldEndpoint := gladia.GladiaApiEndpoint
+	gladia.GladiaApiEndpoint = server.URL
+	t.Cleanup(func() { gladia.GladiaApiEndpoint = oldEndpoint })
+
+	cmd := newRootCmd()
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	cmd.SetArgs([]string{"transcribe", "https://example.com/a.wav", "--model", "solaria-3"})
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if postedBody["model"] != "solaria-3" {
+		t.Fatalf("model = %v", postedBody["model"])
+	}
+	if _, ok := postedBody["language_config"]; ok {
+		t.Fatalf("language_config should be omitted, got %#v", postedBody["language_config"])
+	}
+}
+
+func TestTranscribeCommand_spaceSeparatedLanguage(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "k")
+
+	cases := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{
+			name: "after source",
+			args: []string{"transcribe", "https://example.com/a.wav", "--language", "en", "fr"},
+			want: "en,fr",
+		},
+		{
+			name: "before source",
+			args: []string{"transcribe", "--language", "en", "fr", "meeting.wav"},
+			want: "en,fr",
+		},
+		{
+			name: "quoted value",
+			args: []string{"transcribe", "https://example.com/a.wav", "--language", "en fr"},
+			want: "en,fr",
+		},
+	}
+
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			cmd := newRootCmd()
+			cmd.SetOut(io.Discard)
+			cmd.SetErr(io.Discard)
+			cmd.SetArgs(tc.args)
+
+			err := cmd.Execute()
+			if err == nil {
+				t.Fatal("expected error")
+			}
+			if !strings.Contains(err.Error(), "comma-separated") || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
 func TestTranscribeCommand_invalidLanguage(t *testing.T) {
 	withTempHome(t)
 	t.Setenv(envGladiaAPIKey, "k")
@@ -209,7 +341,7 @@ func TestTranscribeCommand_URLTextOutput(t *testing.T) {
 	base := server.URL
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
 		case r.Method == http.MethodGet && strings.HasPrefix(r.URL.Path, "/result/"):
@@ -253,7 +385,7 @@ func TestTranscribeCommand_codeSwitchingWithoutLanguages(t *testing.T) {
 	base := server.URL
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
 			_ = json.NewDecoder(r.Body).Decode(&postedBody)
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
@@ -267,22 +399,44 @@ func TestTranscribeCommand_codeSwitchingWithoutLanguages(t *testing.T) {
 	gladia.GladiaApiEndpoint = server.URL
 	t.Cleanup(func() { gladia.GladiaApiEndpoint = oldEndpoint })
 
-	cmd := newRootCmd()
-	cmd.SetOut(io.Discard)
-	cmd.SetErr(io.Discard)
-	cmd.SetArgs([]string{"transcribe", "https://example.com/audio.wav", "--code-switching"})
-
-	if err := cmd.Execute(); err != nil {
-		t.Fatal(err)
+	run := func(args ...string) {
+		t.Helper()
+		postedBody = nil
+		cmd := newRootCmd()
+		cmd.SetOut(io.Discard)
+		cmd.SetErr(io.Discard)
+		cmd.SetArgs(append([]string{"transcribe", "https://example.com/audio.wav"}, args...))
+		if err := cmd.Execute(); err != nil {
+			t.Fatalf("execute: %v", err)
+		}
 	}
 
-	lc := postedBody["language_config"].(map[string]interface{})
-	if lc["code_switching"] != true {
-		t.Fatalf("code_switching = %v", lc["code_switching"])
+	assertCodeSwitchingPayload := func(t *testing.T) {
+		t.Helper()
+		lc, ok := postedBody["language_config"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("language_config missing in %#v", postedBody)
+		}
+		if lc["code_switching"] != true {
+			t.Fatalf("code_switching = %v, want true", lc["code_switching"])
+		}
+		langs, _ := lc["languages"].([]interface{})
+		if len(langs) != 0 {
+			t.Fatalf("languages = %v, want empty slice", lc["languages"])
+		}
 	}
-	langs, _ := lc["languages"].([]interface{})
-	if len(langs) != 0 {
-		t.Fatalf("languages = %v, want empty slice", lc["languages"])
+
+	for _, tc := range []struct {
+		name string
+		args []string
+	}{
+		{name: "--code-switching", args: []string{"--code-switching"}},
+		{name: "--cs", args: []string{"--cs"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			run(tc.args...)
+			assertCodeSwitchingPayload(t)
+		})
 	}
 }
 
@@ -299,7 +453,7 @@ func TestTranscribeCommand_modelRequestBody(t *testing.T) {
 	base := server.URL
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
 			_ = json.NewDecoder(r.Body).Decode(&postedBody)
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
@@ -333,7 +487,7 @@ func TestTranscribeCommand_modelRequestBody(t *testing.T) {
 	})
 
 	t.Run("with --model solaria-3", func(t *testing.T) {
-		run("--model", "solaria-3")
+		run("--model", "solaria-3", "--language", "en")
 		if postedBody["model"] != "solaria-3" {
 			t.Fatalf("model = %v", postedBody["model"])
 		}
@@ -353,7 +507,7 @@ func TestTranscribeCommand_diarizationRequestBody(t *testing.T) {
 	base := server.URL
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
 			_ = json.NewDecoder(r.Body).Decode(&postedBody)
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
@@ -420,7 +574,7 @@ func TestTranscribeCommand_languageAndCodeSwitching(t *testing.T) {
 	base := server.URL
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
-		case r.Method == http.MethodPost && r.URL.Path == "/v2/transcription/":
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
 			_ = json.NewDecoder(r.Body).Decode(&postedBody)
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})

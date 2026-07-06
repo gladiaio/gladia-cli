@@ -72,4 +72,16 @@ func TestLanguagesCommand(t *testing.T) {
 	if !strings.Contains(out, "en:") {
 		t.Fatalf("expected language listing, got %q", out)
 	}
+	if strings.Contains(out, "Error parsing") {
+		t.Fatalf("language display errors in output: %q", out)
+	}
+	if !strings.Contains(out, "at: Asturian") {
+		t.Fatalf("expected Asturian entry, got %q", out)
+	}
+	if !strings.Contains(out, "jp: Japanese") {
+		t.Fatalf("expected Japanese entry, got %q", out)
+	}
+	if !strings.Contains(out, "mymr: Burmese") {
+		t.Fatalf("expected Burmese entry, got %q", out)
+	}
 }
