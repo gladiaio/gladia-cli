@@ -38,6 +38,68 @@ function Add-ToUserPath {
     }
 }
 
+function Write-CompletionHints {
+    Write-Host ''
+    Write-Host 'Shell tab completion is available. To set up manually:'
+    Write-Host '  gladia completion --help'
+    Write-Host '  gladia completion powershell'
+}
+
+function Install-PowerShellCompletions {
+    param(
+        [string]$GladiaExe
+    )
+
+    $profilePath = $PROFILE
+    $profileDir = Split-Path -Parent $profilePath
+    if (-not (Test-Path $profileDir)) {
+        New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
+    }
+    if (-not (Test-Path $profilePath)) {
+        New-Item -ItemType File -Path $profilePath -Force | Out-Null
+    }
+
+    $marker = '# gladia-cli completions'
+    if (Test-Path $profilePath) {
+        $existing = Get-Content -Path $profilePath -Raw -ErrorAction SilentlyContinue
+        if ($existing -and $existing.Contains($marker)) {
+            Write-Host "PowerShell completion already configured in $profilePath"
+            Write-Host 'Restart your terminal for completion to take effect.'
+            return
+        }
+    }
+
+    $completion = & $GladiaExe completion powershell
+    Add-Content -Path $profilePath -Value "`n$marker"
+    Add-Content -Path $profilePath -Value $completion
+    Write-Host "Wrote PowerShell completion to $profilePath"
+    Write-Host 'Restart your terminal for completion to take effect.'
+}
+
+function Maybe-PromptCompletions {
+    param(
+        [string]$GladiaExe
+    )
+
+    if ($env:GLADIA_NO_COMPLETION_PROMPT) {
+        Write-CompletionHints
+        return
+    }
+
+    if ([Console]::IsInputRedirected -or [Console]::IsOutputRedirected) {
+        Write-CompletionHints
+        return
+    }
+
+    $reply = Read-Host 'Install shell tab completion? [y/N]'
+    if ($reply -match '^[yY]') {
+        Install-PowerShellCompletions -GladiaExe $GladiaExe
+    }
+    else {
+        Write-CompletionHints
+    }
+}
+
 $arch = Get-Arch
 $tag = Get-LatestTag
 
@@ -72,6 +134,8 @@ try {
     $installed = Join-Path $installDir $BinaryName
     Write-Host "Installed gladia to $installed"
     Write-Host "Restart your terminal if gladia is not found"
+
+    Maybe-PromptCompletions -GladiaExe $installed
 }
 finally {
     Remove-Item -Recurse -Force $tmpdir -ErrorAction SilentlyContinue
