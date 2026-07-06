@@ -209,7 +209,7 @@ func (c *GladiaClient) UploadFile(filePath string) (string, error) {
 	}
 
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	req.Header.Set("x-gladia-key", c.ApiKey)
+	c.setRequestHeaders(req)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
@@ -272,7 +272,7 @@ func (c *GladiaClient) createAndExecuteRequest(method, url string, body io.Reade
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("x-gladia-key", c.ApiKey)
+	c.setRequestHeaders(req)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

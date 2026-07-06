@@ -68,7 +68,7 @@ Examples:
 				return err
 			}
 
-			client := gladia.NewGladiaClient(key, verbose)
+			client := gladia.NewGladiaClient(key, verbose, version)
 
 			audioURL, err := resolveAudioSource(client, args[0])
 			if err != nil {
