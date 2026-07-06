@@ -15,8 +15,8 @@ func TestGladiaClient_apiURL(t *testing.T) {
 }
 
 func TestNewGladiaClient_defaults(t *testing.T) {
-	c := NewGladiaClient("key", true)
-	if c.ApiKey != "key" || !c.Verbose || c.GladiaEndpoint != GladiaApiEndpoint {
+	c := NewGladiaClient("key", true, "dev")
+	if c.ApiKey != "key" || !c.Verbose || c.GladiaEndpoint != GladiaApiEndpoint || c.CLIVersion != "dev" {
 		t.Fatalf("unexpected client: %+v", c)
 	}
 }

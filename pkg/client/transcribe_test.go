@@ -18,6 +18,9 @@ func TestUploadFile_success(t *testing.T) {
 		if r.Header.Get("x-gladia-key") != "secret" {
 			t.Fatalf("api key header = %q", r.Header.Get("x-gladia-key"))
 		}
+		if r.Header.Get("x-gladia-version") != "cli/dev" {
+			t.Fatalf("version header = %q", r.Header.Get("x-gladia-version"))
+		}
 		_ = json.NewEncoder(w).Encode(map[string]string{"audio_url": "https://cdn/audio.wav"})
 	}))
 	defer server.Close()
@@ -28,7 +31,7 @@ func TestUploadFile_success(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := NewGladiaClient("secret", false)
+	c := NewGladiaClient("secret", false, "dev")
 	c.GladiaEndpoint = server.URL
 
 	url, err := c.UploadFile(path)
@@ -52,7 +55,7 @@ func TestUploadFile_apiError(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c := NewGladiaClient("k", false)
+	c := NewGladiaClient("k", false, "dev")
 	c.GladiaEndpoint = server.URL
 	if _, err := c.UploadFile(path); err == nil {
 		t.Fatal("expected error")
@@ -70,6 +73,9 @@ func TestTranscribeAudioURL_success(t *testing.T) {
 	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
+			if r.Header.Get("x-gladia-version") != "cli/dev" {
+				t.Fatalf("version header = %q", r.Header.Get("x-gladia-version"))
+			}
 			_ = json.NewDecoder(r.Body).Decode(&posted)
 			w.WriteHeader(http.StatusCreated)
 			_ = json.NewEncoder(w).Encode(TranscriptionResponse{ResultURL: base + "/poll"})
@@ -81,7 +87,7 @@ func TestTranscribeAudioURL_success(t *testing.T) {
 	})
 	defer server.Close()
 
-	c := NewGladiaClient("k", false)
+	c := NewGladiaClient("k", false, "dev")
 	c.GladiaEndpoint = server.URL
 
 	req := TranscriptionRequest{
@@ -115,7 +121,7 @@ func TestTranscribeAudioURL_apiValidationError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := NewGladiaClient("k", false)
+	c := NewGladiaClient("k", false, "dev")
 	c.GladiaEndpoint = server.URL
 	_, err := c.TranscribeAudioURL("https://a", TranscriptionRequest{})
 	if err == nil {
@@ -132,7 +138,7 @@ func TestPollForTranscriptionResult_errorStatus(t *testing.T) {
 	}))
 	defer server.Close()
 
-	c := NewGladiaClient("k", false)
+	c := NewGladiaClient("k", false, "dev")
 	c.GladiaEndpoint = server.URL
 	_, err := c.pollForTranscriptionResult(server.URL + "/status")
 	if err == nil || !strings.Contains(err.Error(), "boom") {
@@ -141,7 +147,7 @@ func TestPollForTranscriptionResult_errorStatus(t *testing.T) {
 }
 
 func TestDecodeAPIError(t *testing.T) {
-	c := NewGladiaClient("k", false)
+	c := NewGladiaClient("k", false, "dev")
 	rec := httptest.NewRecorder()
 	rec.WriteHeader(http.StatusBadRequest)
 	_ = json.NewEncoder(rec).Encode(map[string]interface{}{

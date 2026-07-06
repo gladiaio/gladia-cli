@@ -81,7 +81,7 @@ func (c *GladiaClient) ListTranscriptions(offset, limit int, status, kind, date,
 	q.Add("after_date", afterDate)
 	req.URL.RawQuery = q.Encode()
 
-	req.Header.Add("x-gladia-key", c.ApiKey)
+	c.setRequestHeaders(req)
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

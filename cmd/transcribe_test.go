@@ -134,7 +134,7 @@ func TestBuildLanguageConfig(t *testing.T) {
 }
 
 func TestResolveAudioSource_URL(t *testing.T) {
-	client := gladia.NewGladiaClient("key", false)
+	client := gladia.NewGladiaClient("key", false, "dev")
 	url := "https://cdn.example.com/audio.wav"
 	got, err := resolveAudioSource(client, url)
 	if err != nil {
@@ -146,7 +146,7 @@ func TestResolveAudioSource_URL(t *testing.T) {
 }
 
 func TestResolveAudioSource_missingFile(t *testing.T) {
-	client := gladia.NewGladiaClient("key", false)
+	client := gladia.NewGladiaClient("key", false, "dev")
 	_, err := resolveAudioSource(client, filepath.Join(t.TempDir(), "nope.wav"))
 	if err == nil {
 		t.Fatal("expected error for missing file")
@@ -163,7 +163,7 @@ func TestResolveAudioSource_upload(t *testing.T) {
 	}))
 	defer server.Close()
 
-	client := gladia.NewGladiaClient("test-key", false)
+	client := gladia.NewGladiaClient("test-key", false, "dev")
 	client.GladiaEndpoint = server.URL
 
 	dir := t.TempDir()
@@ -326,6 +326,45 @@ func TestTranscribeCommand_invalidLanguage(t *testing.T) {
 
 	if err := cmd.Execute(); err == nil {
 		t.Fatal("expected error for invalid language")
+	}
+}
+
+func TestTranscribeCommand_sendsVersionHeader(t *testing.T) {
+	withTempHome(t)
+	t.Setenv(envGladiaAPIKey, "test-key")
+
+	var versionHeader string
+	donePayload := sampleTranscriptionResult()
+	donePayload.Status = "done"
+	doneBody, _ := json.Marshal(donePayload)
+
+	server := httptest.NewServer(nil)
+	base := server.URL
+	server.Config.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch {
+		case r.Method == http.MethodPost && r.URL.Path == "/v2/pre-recorded":
+			versionHeader = r.Header.Get("x-gladia-version")
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(map[string]string{"result_url": base + "/result/1"})
+		case r.Method == http.MethodGet:
+			_, _ = w.Write(doneBody)
+		}
+	})
+	defer server.Close()
+
+	oldEndpoint := gladia.GladiaApiEndpoint
+	gladia.GladiaApiEndpoint = server.URL
+	t.Cleanup(func() { gladia.GladiaApiEndpoint = oldEndpoint })
+
+	cmd := newRootCmd()
+	cmd.SetOut(io.Discard)
+	cmd.SetErr(io.Discard)
+	cmd.SetArgs([]string{"transcribe", "https://example.com/audio.wav"})
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("execute: %v", err)
+	}
+	if versionHeader != "cli/dev" {
+		t.Fatalf("x-gladia-version = %q, want cli/dev", versionHeader)
 	}
 }
 
