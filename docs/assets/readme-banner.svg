@@ -1,0 +1,120 @@
+<svg width="1200" height="300" viewBox="0 0 1200 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="gladia — audio to text, from your terminal">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#070c1a"/>
+      <stop offset="0.6" stop-color="#0a1122"/>
+      <stop offset="1" stop-color="#0d1730"/>
+    </linearGradient>
+    <linearGradient id="wave" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#22d3ee"/>
+      <stop offset="1" stop-color="#3b82f6"/>
+    </linearGradient>
+    <radialGradient id="glowCyan" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.30"/>
+      <stop offset="0.55" stop-color="#22d3ee" stop-opacity="0.10"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M40 0H0V40" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/>
+    </pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="softGlow" x="-80%" y="-80%" width="260%" height="260%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="1200" height="300" fill="url(#bg)"/>
+  <rect width="1200" height="300" fill="url(#grid)"/>
+
+  <!-- scattered stars -->
+  <g fill="#cfe8ff">
+    <circle cx="470" cy="42" r="1.4" opacity="0.35"/>
+    <circle cx="540" cy="262" r="1.1" opacity="0.25"/>
+    <circle cx="960" cy="28" r="1.3" opacity="0.3"/>
+    <circle cx="660" cy="22" r="1.0" opacity="0.25"/>
+    <circle cx="905" cy="270" r="1.5" opacity="0.3"/>
+    <circle cx="415" cy="150" r="1.2" opacity="0.2"/>
+    <circle cx="1120" cy="150" r="1.0" opacity="0.25"/>
+    <circle cx="585" cy="118" r="0.9" opacity="0.2"/>
+  </g>
+
+  <!-- ===== left: wordmark ===== -->
+  <!-- app icon: audio waveform glyph -->
+  <g>
+    <rect x="78" y="96" width="74" height="74" rx="18" fill="#0f1a33" stroke="#243357" stroke-width="1.5"/>
+    <rect x="78" y="96" width="74" height="74" rx="18" fill="url(#glowCyan)"/>
+    <g stroke-width="3.4" stroke-linecap="round">
+      <line x1="98" y1="126" x2="98" y2="140" stroke="#22d3ee"/>
+      <line x1="108" y1="118" x2="108" y2="148" stroke="#2bcdea"/>
+      <line x1="118" y1="108" x2="118" y2="158" stroke="#33bdf0"/>
+      <line x1="128" y1="120" x2="128" y2="146" stroke="#3ba0f4"/>
+      <line x1="138" y1="128" x2="138" y2="138" stroke="#3b82f6"/>
+    </g>
+  </g>
+  <text x="172" y="152" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="64" font-weight="800" fill="#f2f7ff" letter-spacing="-1">gladia</text>
+  <text x="174" y="192" font-family="-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="21" font-weight="400" fill="#8ea3c8">Audio to text, from your terminal.</text>
+
+  <!-- ===== middle: audio waveform flowing into the terminal ===== -->
+  <ellipse cx="720" cy="150" rx="250" ry="150" fill="url(#glowCyan)"/>
+
+  <!-- waveform (sound going in) -->
+  <g stroke-width="4" stroke-linecap="round" filter="url(#glow)">
+    <line x1="470" y1="132" x2="470" y2="168" stroke="#22d3ee"><animate attributeName="y1" values="132;120;132" dur="1.4s" repeatCount="indefinite"/><animate attributeName="y2" values="168;180;168" dur="1.4s" repeatCount="indefinite"/></line>
+    <line x1="484" y1="112" x2="484" y2="188" stroke="#2bcbea"><animate attributeName="y1" values="112;138;112" dur="1.1s" repeatCount="indefinite"/><animate attributeName="y2" values="188;162;188" dur="1.1s" repeatCount="indefinite"/></line>
+    <line x1="498" y1="96" x2="498" y2="204" stroke="#33bdf0"><animate attributeName="y1" values="96;124;96" dur="1.6s" repeatCount="indefinite"/><animate attributeName="y2" values="204;176;204" dur="1.6s" repeatCount="indefinite"/></line>
+    <line x1="512" y1="120" x2="512" y2="180" stroke="#3ba0f4"><animate attributeName="y1" values="120;104;120" dur="1.3s" repeatCount="indefinite"/><animate attributeName="y2" values="180;196;180" dur="1.3s" repeatCount="indefinite"/></line>
+    <line x1="526" y1="138" x2="526" y2="162" stroke="#3b82f6"><animate attributeName="y1" values="138;118;138" dur="0.9s" repeatCount="indefinite"/><animate attributeName="y2" values="162;182;162" dur="0.9s" repeatCount="indefinite"/></line>
+  </g>
+
+  <!-- flow lines: waveform converts into the transcript -->
+  <g fill="none" stroke-width="2" filter="url(#glow)">
+    <path d="M540 128 C 570 128, 585 122, 600 122" stroke="#22d3ee" stroke-opacity="0.7"/>
+    <path d="M540 150 C 570 150, 585 150, 600 150" stroke="#38bdf8" stroke-opacity="0.7"/>
+    <path d="M540 172 C 570 172, 585 178, 600 178" stroke="#3b82f6" stroke-opacity="0.7"/>
+  </g>
+
+  <!-- terminal window: the transcript -->
+  <g>
+    <rect x="600" y="58" width="480" height="184" rx="12" fill="#0b1526" fill-opacity="0.94" stroke="#213152" stroke-width="1.5"/>
+    <!-- title bar -->
+    <line x1="600" y1="90" x2="1080" y2="90" stroke="#1b2947" stroke-width="1"/>
+    <circle cx="622" cy="74" r="5" fill="#ff5f56"/>
+    <circle cx="640" cy="74" r="5" fill="#ffbd2e"/>
+    <circle cx="658" cy="74" r="5" fill="#27c93f"/>
+    <!-- prompt -->
+    <text x="620" y="122" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="15" font-weight="600">
+      <tspan fill="#22d3ee">&#10095;</tspan><tspan fill="#e2e8f0" dx="8">gladia transcribe meeting.wav --diarize</tspan>
+    </text>
+    <!-- transcript rows with speaker labels -->
+    <g font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" font-weight="600">
+      <text x="620" y="150" fill="#22d3ee">Speaker 0</text>
+      <rect x="694" y="141" width="150" height="9" rx="4.5" fill="#33507e"/>
+      <rect x="850" y="141" width="86" height="9" rx="4.5" fill="#2b4066"/>
+
+      <text x="620" y="172" fill="#3b82f6">Speaker 1</text>
+      <rect x="694" y="163" width="104" height="9" rx="4.5" fill="#33507e"/>
+      <rect x="804" y="163" width="120" height="9" rx="4.5" fill="#2b4066"/>
+
+      <text x="620" y="194" fill="#22d3ee">Speaker 0</text>
+      <rect x="694" y="185" width="188" height="9" rx="4.5" fill="#33507e"/>
+      <rect x="888" y="185" width="60" height="9" rx="4.5" fill="#2b4066"/>
+    </g>
+    <rect x="620" y="212" width="10" height="12" rx="2" fill="#22d3ee">
+      <animate attributeName="opacity" values="1;0;1" dur="1.6s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- 100+ languages hint -->
+  <text x="620" y="264" font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace" font-size="12" fill="#5f739a">100+ languages · real-time &amp; batch · speaker diarization</text>
+</svg>
