@@ -146,6 +146,60 @@ func TestPollForTranscriptionResult_errorStatus(t *testing.T) {
 	}
 }
 
+func TestPollForTranscriptionResult_verboseGoesToStderr(t *testing.T) {
+	calls := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		calls++
+		if calls == 1 {
+			_, _ = w.Write([]byte(`{"status":"processing","request_id":"G-test"}`))
+			return
+		}
+		_, _ = w.Write([]byte(`{"status":"done","request_id":"G-test","result":{"transcription":{"full_transcript":"ok"}}}`))
+	}))
+	defer server.Close()
+
+	stdoutR, stdoutW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	stderrR, stderrW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldStdout, oldStderr := os.Stdout, os.Stderr
+	os.Stdout, os.Stderr = stdoutW, stderrW
+
+	c := NewGladiaClient("k", true, "dev")
+	c.GladiaEndpoint = server.URL
+	_, pollErr := c.pollForTranscriptionResult(server.URL + "/status")
+
+	stdoutW.Close()
+	stderrW.Close()
+	os.Stdout, os.Stderr = oldStdout, oldStderr
+
+	if pollErr != nil {
+		t.Fatal(pollErr)
+	}
+
+	stdoutBuf := make([]byte, 1<<20)
+	nOut, _ := stdoutR.Read(stdoutBuf)
+	stdout := string(stdoutBuf[:nOut])
+
+	stderrBuf := make([]byte, 1<<20)
+	nErr, _ := stderrR.Read(stderrBuf)
+	stderr := string(stderrBuf[:nErr])
+
+	if stdout != "" {
+		t.Fatalf("stdout should be empty, got %q", stdout)
+	}
+	if !strings.Contains(stderr, "Transcription in progress...") {
+		t.Fatalf("stderr missing progress: %q", stderr)
+	}
+	if !strings.Contains(stderr, "Transcription completed successfully.") {
+		t.Fatalf("stderr missing success message: %q", stderr)
+	}
+}
+
 func TestDecodeAPIError(t *testing.T) {
 	c := NewGladiaClient("k", false, "dev")
 	rec := httptest.NewRecorder()
