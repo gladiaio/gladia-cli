@@ -1,6 +1,6 @@
 module github.com/gladiaio/gladia-cli
 
-go 1.18
+go 1.27.3
 
 require (
 	github.com/olekukonko/tablewriter v0.0.5
