@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -282,33 +283,46 @@ func (c *GladiaClient) createAndExecuteRequest(method, url string, body io.Reade
 	return resp, nil
 }
 
-// Poll for the transcription result
+// Poll for the transcription result. Polling stops when the transcription is
+// done or failed, when PollTimeout elapses, or on a non-retryable HTTP error.
 func (c *GladiaClient) pollForTranscriptionResult(resultURL string) (*TranscriptionResult, error) {
+	if err := c.validateResultURL(resultURL); err != nil {
+		return nil, err
+	}
+
+	interval := c.PollInterval
+	if interval <= 0 {
+		interval = DefaultPollInterval
+	}
+	timeout := c.PollTimeout
+	if timeout <= 0 {
+		timeout = DefaultPollTimeout
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
 	spinner := []string{"-", "\\", "|", "/"}
 	spinnerIndex := 0
 
 	for {
-		resp, err := c.createAndExecuteRequest("GET", resultURL, nil)
+		result, retry, err := c.pollOnce(ctx, resultURL)
 		if err != nil {
-			return nil, err
-		}
-		defer resp.Body.Close()
-
-		var result TranscriptionResult
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			if ctx.Err() != nil {
+				return nil, fmt.Errorf("transcription did not complete within %s: %w", timeout, err)
+			}
 			return nil, err
 		}
 
-		if result.Status == "done" {
+		if result != nil && result.Status == "done" {
 			if c.Verbose {
 				fmt.Fprintf(os.Stderr, "\033[H\033[2J") // Clear the terminal screen
 				fmt.Fprintln(os.Stderr, "Transcription completed successfully.")
 				fmt.Fprintf(os.Stderr, "\033[H\033[2J") // Clear the terminal screen
 			}
-			return &result, nil
+			return result, nil
 		}
 
-		if result.Status == "error" {
+		if result != nil && result.Status == "error" {
 			if c.Verbose {
 				fmt.Fprintf(os.Stderr, "\033[H\033[2J") // Clear the terminal screen
 			}
@@ -316,15 +330,57 @@ func (c *GladiaClient) pollForTranscriptionResult(resultURL string) (*Transcript
 		}
 
 		if c.Verbose {
+			status, requestID := retry, ""
+			if result != nil {
+				status, requestID = result.Status, result.RequestID
+			}
 			fmt.Fprintf(os.Stderr, "\rTranscription in progress... %s     (%s) (request_id: %s)",
 				spinner[spinnerIndex],
-				result.Status,
-				result.RequestID)
+				status,
+				requestID)
 		}
 		spinnerIndex = (spinnerIndex + 1) % len(spinner)
 
-		time.Sleep(1 * time.Second)
+		select {
+		case <-ctx.Done():
+			return nil, fmt.Errorf("transcription did not complete within %s", timeout)
+		case <-time.After(interval):
+		}
 	}
+}
+
+// pollOnce fetches the result URL once. On a transient HTTP error (429 or 5xx)
+// it returns a nil result and a non-empty retry reason so the caller polls again.
+func (c *GladiaClient) pollOnce(ctx context.Context, resultURL string) (*TranscriptionResult, string, error) {
+	reqCtx, cancel := context.WithTimeout(ctx, pollRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(reqCtx, http.MethodGet, resultURL, nil)
+	if err != nil {
+		return nil, "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	c.setRequestHeaders(req)
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode >= 500 {
+		_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 1<<16))
+		return nil, resp.Status, nil
+	}
+	if resp.StatusCode >= 300 {
+		return nil, "", c.decodeAPIError(resp)
+	}
+
+	var result TranscriptionResult
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, "", err
+	}
+	return &result, "", nil
 }
 
 func (c *GladiaClient) decodeAPIError(resp *http.Response) error {
