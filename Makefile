@@ -23,6 +23,10 @@ watch-dev:
 
 test:
 	go test -race -v ./...
+
+.PHONY: test-install
+test-install:
+	sh scripts/test-install.sh
 watch-test:
 	reflex -t 50ms -s -- sh -c 'gotest -race -v ./...'
 
